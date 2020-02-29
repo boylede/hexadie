@@ -11,7 +11,8 @@ use amethyst::{
     LoggerConfig, StdoutLog,
 };
 
-mod states;
+mod loading_screen;
+mod main_menu;
 
 fn main() -> amethyst::Result<()> {
     let app_root = application_root_dir()?;
@@ -53,7 +54,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default()),
         )?;
 
-    let mut game = Application::new(assets_path, states::InitialState, game_data)?;
+    let mut game = Application::new(assets_path, loading_screen::InitialState, game_data)?;
     game.run();
 
     Ok(())

@@ -1,8 +1,12 @@
 use amethyst::{
-    input::{get_key, is_close_requested, is_key_down, VirtualKeyCode},
+    input::{is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
     window::ScreenDimensions,
 };
+
+use crate::main_menu::MainMenuState;
+
+/// The initial state will load any needed assets, and set them up in the world as needed. It will display a progress bar and loading text. Once loading is complete, we pass to the main menu state.
 
 pub struct InitialState;
 
@@ -21,11 +25,7 @@ impl SimpleState for InitialState {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
                 return Trans::Quit;
             }
-
-            if let Some(_event) = get_key(&event) {
-                unimplemented!()
-            }
         }
-        Trans::None
+        Trans::Switch(MainMenuState::new_boxed())
     }
 }
