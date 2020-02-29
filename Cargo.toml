@@ -1,0 +1,15 @@
+[package]
+name = "hexadie"
+version = "0.1.0"
+authors = ["Daniel Boyle <boylede+github@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+amethyst = "0.13.0"
+
+[features]
+default = ["vulkan"]
+empty = ["amethyst/empty"]
+metal = ["amethyst/metal"]
+vulkan = ["amethyst/vulkan"]
+nightly = ["amethyst/nightly"]
