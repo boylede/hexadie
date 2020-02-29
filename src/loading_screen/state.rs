@@ -1,14 +1,25 @@
 use amethyst::{
+    assets::{
+        AssetStorage, Loader, ProgressCounter, Handle,
+    },
+    core::{transform::Transform},
     input::{is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
+    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
     window::ScreenDimensions,
 };
 
 use crate::main_menu::MainMenuState;
+use crate::config::GameSettings;
 
 /// The initial state will load any needed assets, and set them up in the world as needed. It will display a progress bar and loading text. Once loading is complete, we pass to the main menu state.
 
-pub struct InitialState;
+#[derive(Default)]
+pub struct InitialState {
+    progress: ProgressCounter,
+    spritesheet: Option<Handle<SpriteSheet>>,
+    settings: Option<GameSettings>,
+}
 
 impl SimpleState for InitialState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
