@@ -24,7 +24,7 @@ fn main() -> amethyst::Result<()> {
 
     let assets_path = app_root.join("assets");
 
-    let icon_path = assets_path.join("boardgamepack/dice/diered6.png");
+    let icon_path = assets_path.join("boardgamepack/dice/dieRed6.png");
 
     let display_config = DisplayConfig {
         title: "Hexadie".to_string(),
