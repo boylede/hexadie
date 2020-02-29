@@ -11,6 +11,7 @@ use amethyst::{
     LoggerConfig, StdoutLog,
 };
 
+mod config;
 mod loading_screen;
 mod main_menu;
 
