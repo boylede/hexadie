@@ -10,7 +10,7 @@ use amethyst::{
     input::StringBindings,
     window::DisplayConfig,
     utils::application_root_dir,
-    LoggerConfig, StdoutLog,
+    LoggerConfig, StdoutLog, LogLevelFilter,
     ui::{RenderUi, UiBundle}
 };
 
@@ -26,6 +26,7 @@ fn main() -> amethyst::Result<()> {
     let mut logger: LoggerConfig = Default::default();
     logger.log_file = Some(app_root.join("log.txt"));
     logger.stdout = StdoutLog::Off;
+    logger.level_filter = LogLevelFilter::Info;
     amethyst::start_logger(logger);
 
     let assets_path = app_root.join("assets");
