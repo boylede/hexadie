@@ -1,6 +1,7 @@
 use amethyst::{
     assets::{
-        Handle, Loader,
+        Handle,
+        Loader,
     },
     core::ecs::Entity,
     input::{get_key, is_close_requested, is_key_down, VirtualKeyCode},
@@ -11,6 +12,7 @@ use amethyst::{
 };
 
 use crate::config::GameSettings;
+use crate::entities::create_sprite;
 
 pub struct MainMenuState {
     spritesheet: Handle<SpriteSheet>,
@@ -23,7 +25,9 @@ impl SimpleState for MainMenuState {
         let mut world = data.world;
         let _dimensions = (*world.read_resource::<ScreenDimensions>()).clone();
         create_test_text(&mut world, &self.font, "TEST TEST TEST TEST");
-
+        create_sprite(&mut world, &self.spritesheet, 5, 21.0, 300.0);
+        create_sprite(&mut world, &self.spritesheet, 5, 640.0, 21.0);
+        create_sprite(&mut world, &self.spritesheet, 5, -320.0, 90.0);
     }
 
     fn handle_event(
