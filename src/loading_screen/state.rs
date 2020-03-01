@@ -12,6 +12,7 @@ use amethyst::{
 
 use crate::main_menu::MainMenuState;
 use crate::config::GameSettings;
+use crate::entities::{create_sprite, create_camera};
 
 /// The initial state will load any needed assets, and set them up in the world as needed. It will display a progress bar and loading text. Once loading is complete, we pass to the main menu state.
 
@@ -127,37 +128,6 @@ fn load_font(world: &mut World, name: &str, progress: &mut ProgressCounter ) -> 
     Some(font)
 }
 
-fn create_sprite(world: &mut World, spritesheet: &Option<Handle<SpriteSheet>>, which: usize, x: f32, y: f32) -> Entity {
-
-    let sprite_sheet_handle = spritesheet.as_ref().unwrap().clone();
-
-    let sprite_render = SpriteRender {
-        sprite_sheet: sprite_sheet_handle,
-        sprite_number: which,
-    };
-
-    let mut transform = Transform::default();
-    transform.set_translation_xyz(x, y, 0.0);
-
-    world
-        .create_entity()
-        .with(sprite_render)
-        .with(transform)
-        .build()
-}
-
-fn create_camera(world: &mut World) {
-    let mut transform = Transform::default();
-    transform.set_translation_xyz(0.0, 0.0, 1.0);
-
-    world
-        .create_entity()
-        .with(Camera::standard_2d(1600.0, 1600.0))
-        .with(transform)
-        .build();
-}
-
-
 impl InitialState {
     pub fn new() -> Self {
         Default::default()
@@ -166,5 +136,3 @@ impl InitialState {
         Box::new(InitialState::new())
     }
 }
-
-
