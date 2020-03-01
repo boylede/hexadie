@@ -2,11 +2,12 @@ use amethyst::{
     assets::{
         AssetStorage, Loader, ProgressCounter, Handle, Progress, Completion, RonFormat,
     },
-    core::{transform::Transform},
+    core::{transform::Transform, ecs::Entity},
     input::{is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
     renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
     window::ScreenDimensions,
+    ui::{Anchor, TtfFormat, UiText, UiTransform, FontAsset},
 };
 
 use crate::main_menu::MainMenuState;
@@ -18,7 +19,9 @@ use crate::config::GameSettings;
 pub struct InitialState {
     progress: ProgressCounter,
     spritesheet: Option<Handle<SpriteSheet>>,
+    font: Option<Handle<FontAsset>>,
     settings: Option<Handle<GameSettings>>,
+    loading_sprites: Vec<Entity>,
 }
 
 impl SimpleState for InitialState {
@@ -32,10 +35,12 @@ impl SimpleState for InitialState {
         world.insert(AssetStorage::<GameSettings>::new());
         self.settings = load_settings(world, "config", &mut self.progress);
 
-        create_sprite(world, &self.spritesheet, 1, -300.0, 158.0);
-        create_sprite(world, &self.spritesheet, 5, 200.0, 500.0);
-        create_sprite(world, &self.spritesheet, 2, -153.0, -264.0);
-        create_sprite(world, &self.spritesheet, 2, 183.0, -184.0);
+        self.loading_sprites.push(create_sprite(world, &self.spritesheet, 1, -300.0, 158.0));
+        self.loading_sprites.push(create_sprite(world, &self.spritesheet, 5, 200.0, 500.0));
+        self.loading_sprites.push(create_sprite(world, &self.spritesheet, 2, -153.0, -264.0));
+        self.loading_sprites.push(create_sprite(world, &self.spritesheet, 2, 183.0, -184.0));
+
+        self.font = load_font(world, "kenneyfonts/Kenney Future Narrow.ttf", &mut self.progress);
     }
 
     fn handle_event(
@@ -58,9 +63,13 @@ impl SimpleState for InitialState {
                 Trans::Quit
             }
             Completion::Complete => {
+                for ent in &self.loading_sprites {
+                    data.world.delete_entity(*ent);
+                }
                 Trans::Switch(MainMenuState::new_boxed(
                     self.spritesheet.take().unwrap(),
                     self.settings.take().unwrap(),
+                    self.font.take().unwrap(),
                 ))
             }
 
@@ -107,7 +116,18 @@ fn load_spritesheet(world: &mut World, name: &str, progress: &mut ProgressCounte
     Some(handle)
 }
 
-fn create_sprite(world: &mut World, spritesheet: &Option<Handle<SpriteSheet>>, which: usize, x: f32, y: f32) {
+fn load_font(world: &mut World, name: &str, progress: &mut ProgressCounter ) -> Option<Handle<FontAsset>>  {
+    let font = world.read_resource::<Loader>().load(
+        name,
+        TtfFormat,
+        (),
+        &world.read_resource(),
+    );
+
+    Some(font)
+}
+
+fn create_sprite(world: &mut World, spritesheet: &Option<Handle<SpriteSheet>>, which: usize, x: f32, y: f32) -> Entity {
 
     let sprite_sheet_handle = spritesheet.as_ref().unwrap().clone();
 
@@ -123,7 +143,7 @@ fn create_sprite(world: &mut World, spritesheet: &Option<Handle<SpriteSheet>>, w
         .create_entity()
         .with(sprite_render)
         .with(transform)
-        .build();
+        .build()
 }
 
 fn create_camera(world: &mut World) {
