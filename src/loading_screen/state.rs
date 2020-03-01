@@ -1,6 +1,6 @@
 use amethyst::{
     assets::{
-        AssetStorage, Loader, ProgressCounter, Handle, Progress, Completion, RonFormat,
+        AssetStorage, Loader, ProgressCounter, Handle, Progress, Completion, RonFormat, Tracker,
     },
     core::{transform::Transform, ecs::Entity},
     input::{is_close_requested, is_key_down, VirtualKeyCode},
@@ -23,6 +23,7 @@ pub struct InitialState {
     font: Option<Handle<FontAsset>>,
     settings: Option<Handle<GameSettings>>,
     loading_sprites: Vec<Entity>,
+    keep_open: Option<Box<dyn Tracker>>, // amethyst does not expose the required type, using dynamic dispatch to get around this.
 }
 
 impl SimpleState for InitialState {
@@ -31,17 +32,23 @@ impl SimpleState for InitialState {
         let _dimensions = (*world.read_resource::<ScreenDimensions>()).clone();
 
         create_camera(world);
-        self.spritesheet = load_spritesheet(world, "boardgamepack/dice/diceRed", &mut self.progress);
-
+        let spritesheet = load_spritesheet(world, "boardgamepack/dice/diceRed", &mut self.progress);
+        
         world.insert(AssetStorage::<GameSettings>::new());
-        self.settings = load_settings(world, "config", &mut self.progress);
 
-        self.loading_sprites.push(create_sprite(world, &self.spritesheet, 1, -300.0, 158.0));
-        self.loading_sprites.push(create_sprite(world, &self.spritesheet, 5, 200.0, 500.0));
-        self.loading_sprites.push(create_sprite(world, &self.spritesheet, 2, -153.0, -264.0));
-        self.loading_sprites.push(create_sprite(world, &self.spritesheet, 2, 183.0, -184.0));
+        let settings = load_settings(world, "config", &mut self.progress);
+        
+        
 
-        self.font = load_font(world, "kenneyfonts/Kenney Future Narrow.ttf", &mut self.progress);
+        let font = load_font(world, "kenneyfonts/Kenney Future Narrow.ttf", &mut self.progress);
+
+        self.settings = Some(settings);
+        self.spritesheet = Some(spritesheet);
+        self.font = Some(font);
+
+        <&mut ProgressCounter as Progress>::add_assets(&mut &mut self.progress, 1); // amethyst has an unchecked subtraction so we're increasing this value to get around it.
+        let keep_open = self.progress.create_tracker();
+        self.keep_open = Some(Box::new(keep_open));
     }
 
     fn handle_event(
@@ -73,13 +80,27 @@ impl SimpleState for InitialState {
                     self.font.take().unwrap(),
                 ))
             }
-
-            Completion::Loading => Trans::None,
+            Completion::Loading => {
+                let spritesheet = &self.spritesheet;
+                if let Some(spritesheet) = spritesheet {
+                    let complete = self.loading_sprites.len();
+                    if complete == 6 {
+                        let last = self.keep_open.take().unwrap();
+                        last.success();
+                    } else if complete < 6 {
+                        let number = complete as f32;
+                        let x = number * 64.0 - 160.0;
+                        let y = 32.0;
+                        self.loading_sprites.push(create_sprite(data.world, &spritesheet, complete, x, y));
+                    }
+                }
+                Trans::None
+            },
         }
     }
 }
 
-fn load_settings(world: &mut World, name: &str, progress: &mut ProgressCounter ) -> Option<Handle<GameSettings>> {
+fn load_settings(world: &mut World, name: &str, progress: &mut ProgressCounter ) -> Handle<GameSettings> {
     let loader = world.read_resource::<Loader>();
     let store = world.read_resource::<AssetStorage<GameSettings>>();
     let settings = loader.load(
@@ -88,11 +109,10 @@ fn load_settings(world: &mut World, name: &str, progress: &mut ProgressCounter )
         &mut *progress,
         &store,
     );
-    Some(settings)
+    settings
 }
 
-fn load_spritesheet(world: &mut World, name: &str, progress: &mut ProgressCounter ) -> Option<Handle<SpriteSheet>> {
-    
+fn load_spritesheet(world: &mut World, name: &str, progress: &mut ProgressCounter ) -> Handle<SpriteSheet> {
     let handle = {
         let texture_handle = {
             let loader = world.read_resource::<Loader>();
@@ -114,18 +134,16 @@ fn load_spritesheet(world: &mut World, name: &str, progress: &mut ProgressCounte
             &sprite_sheet_store,
         )
     };
-    Some(handle)
+    handle
 }
 
-fn load_font(world: &mut World, name: &str, progress: &mut ProgressCounter ) -> Option<Handle<FontAsset>>  {
-    let font = world.read_resource::<Loader>().load(
+fn load_font(world: &mut World, name: &str, progress: &mut ProgressCounter ) -> Handle<FontAsset>  {
+    world.read_resource::<Loader>().load(
         name,
         TtfFormat,
         (),
         &world.read_resource(),
-    );
-
-    Some(font)
+    )
 }
 
 impl InitialState {
