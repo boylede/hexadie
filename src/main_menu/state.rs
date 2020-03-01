@@ -1,15 +1,19 @@
 use amethyst::{
     assets::{
-        AssetStorage, Loader,
+        Handle,
     },
-    core::{transform::Transform},
     input::{get_key, is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
+    renderer::{SpriteSheet},
     window::ScreenDimensions,
 };
 
-pub struct MainMenuState;
+use crate::config::GameSettings;
+
+pub struct MainMenuState {
+    spritesheet: Handle<SpriteSheet>,
+    settings: Handle<GameSettings>,
+}
 
 impl SimpleState for MainMenuState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
@@ -37,12 +41,13 @@ impl SimpleState for MainMenuState {
 }
 
 impl MainMenuState {
-    pub fn new() -> Self {
-        MainMenuState
+    pub fn new(spritesheet: Handle<SpriteSheet>, settings: Handle<GameSettings>) -> Self {
+        MainMenuState {
+            spritesheet,
+            settings,
+        }
     }
-    pub fn new_boxed() -> Box<Self> {
-        Box::new(MainMenuState::new())
+    pub fn new_boxed(spritesheet: Handle<SpriteSheet>, settings: Handle<GameSettings>) -> Box<Self> {
+        Box::new(MainMenuState::new(spritesheet, settings))
     }
 }
-
-
