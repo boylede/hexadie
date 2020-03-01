@@ -30,7 +30,7 @@ impl SimpleState for InitialState {
         self.spritesheet = load_spritesheet(world, "boardgamepack/dice/diceRed", &mut self.progress);
 
         world.insert(AssetStorage::<GameSettings>::new());
-        self.settings = load_settings(world, "config.ron", &mut self.progress);
+        self.settings = load_settings(world, "config", &mut self.progress);
 
         create_sprite(world, &self.spritesheet, 1, -300.0, 158.0);
         create_sprite(world, &self.spritesheet, 5, 200.0, 500.0);

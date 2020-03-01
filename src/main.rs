@@ -1,4 +1,5 @@
 use amethyst::{
+    assets::Processor,
     core::transform::TransformBundle,
     prelude::*,
     renderer::{
@@ -14,6 +15,8 @@ use amethyst::{
 mod config;
 mod loading_screen;
 mod main_menu;
+
+use config::GameSettings;
 
 fn main() -> amethyst::Result<()> {
     let app_root = application_root_dir()?;
@@ -52,8 +55,13 @@ fn main() -> amethyst::Result<()> {
                     RenderToWindow::from_config(display_config)
                         .with_clear([0.34, 0.36, 0.52, 1.0]),
                 )
-                .with_plugin(RenderFlat2D::default()),
-        )?;
+                .with_plugin(RenderFlat2D::default())
+        )?
+        .with(
+            Processor::<GameSettings>::new(),
+            "settings_processor",
+            &[],
+        );
 
     let mut game = Application::new(assets_path, loading_screen::InitialState::new(), game_data)?;
     game.run();
