@@ -5,7 +5,7 @@ A distillation of territorial management games. Made in Rust with Amethyst for m
 - [ ] Preparation 
   - [X] display some sprites
   - [X] display some text
-  - [ ] let the user click on some sprites
+  - [X] let the user click on something
   - [ ] let the user click on one sprite, enter a different state, allowing a second sprite selection or canceling the initial selection by clicking on the same one again. during this state, some sprites that could be clicked on before are no longer clickable
   - [ ] display a stack of dice on top of some sprites
 - [ ] MVP Game

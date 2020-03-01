@@ -8,7 +8,7 @@ use amethyst::{
     prelude::*,
     renderer::{SpriteSheet},
     window::ScreenDimensions,
-    ui::{Anchor, TtfFormat, UiText, UiTransform, FontAsset},
+    ui::{Anchor, TtfFormat, UiText, UiTransform, FontAsset, UiButtonBuilder, Interactable, UiEvent},
 };
 
 use crate::config::GameSettings;
@@ -28,6 +28,7 @@ impl SimpleState for MainMenuState {
         create_sprite(&mut world, &self.spritesheet, 5, 21.0, 300.0);
         create_sprite(&mut world, &self.spritesheet, 5, 640.0, 21.0);
         create_sprite(&mut world, &self.spritesheet, 5, -320.0, 90.0);
+        create_button(&mut world, "hello world", self.font.clone());
     }
 
     fn handle_event(
@@ -42,6 +43,25 @@ impl SimpleState for MainMenuState {
 
             if let Some(_event) = get_key(&event) {
                 //
+            }
+        }
+        if let StateEvent::Ui(event) = &event {
+            println!("got ui event");
+            use amethyst::ui::UiEventType::*;
+            let UiEvent{event_type, target} = event;
+            match event_type {
+                Click => {
+                    println!("Clicked! {:?}", target);
+                },
+                HoverStart => {
+
+                },
+                HoverStop => {
+
+                }
+                _ => {
+                    //
+                }
             }
         }
         Trans::None
@@ -78,4 +98,19 @@ fn create_test_text(world: &mut World, font: &Handle<FontAsset>, text: &str) -> 
         )).build();
 
         text
+}
+
+fn create_button(world: &mut World, text: &str, font: Handle<FontAsset>) {
+    // interactable
+    
+    // uitransform
+    let transform = UiTransform::new("test".to_string(), Anchor::Middle, Anchor::Middle, 0.0, 0.0, 0.0, 200.0, 50.0);
+    // uitext
+    let text = UiText::new(font, text.to_string(), [1.0, 1.0, 1.0, 1.0], 20.0);
+    world
+        .create_entity()
+        .with(Interactable)
+        .with(transform)
+        .with(text)
+        .build();
 }

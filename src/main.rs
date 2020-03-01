@@ -7,7 +7,7 @@ use amethyst::{
         types::DefaultBackend,
         RenderingBundle,
     },
-    input::StringBindings,
+    input::{StringBindings, InputBundle},
     window::DisplayConfig,
     utils::application_root_dir,
     LoggerConfig, StdoutLog, LogLevelFilter,
@@ -62,6 +62,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderUi::default())
         )?
+        .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with(
             Processor::<GameSettings>::new(),
