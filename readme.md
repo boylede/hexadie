@@ -4,7 +4,7 @@ A distillation of territorial management games. Made in Rust with Amethyst for m
 # Milestones
 - [ ] Preparation 
   - [X] display some sprites
-  - [ ] display some text
+  - [X] display some text
   - [ ] let the user click on some sprites
   - [ ] let the user click on one sprite, enter a different state, allowing a second sprite selection or canceling the initial selection by clicking on the same one again. during this state, some sprites that could be clicked on before are no longer clickable
   - [ ] display a stack of dice on top of some sprites

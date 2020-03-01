@@ -1,11 +1,13 @@
 use amethyst::{
     assets::{
-        Handle,
+        Handle, Loader,
     },
+    core::ecs::Entity,
     input::{get_key, is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
     renderer::{SpriteSheet},
     window::ScreenDimensions,
+    ui::{Anchor, TtfFormat, UiText, UiTransform, FontAsset},
 };
 
 use crate::config::GameSettings;
@@ -13,12 +15,14 @@ use crate::config::GameSettings;
 pub struct MainMenuState {
     spritesheet: Handle<SpriteSheet>,
     settings: Handle<GameSettings>,
+    font: Handle<FontAsset>,
 }
 
 impl SimpleState for MainMenuState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        let world = data.world;
+        let mut world = data.world;
         let _dimensions = (*world.read_resource::<ScreenDimensions>()).clone();
+        create_test_text(&mut world, &self.font, "TEST TEST TEST TEST");
 
     }
 
@@ -41,13 +45,33 @@ impl SimpleState for MainMenuState {
 }
 
 impl MainMenuState {
-    pub fn new(spritesheet: Handle<SpriteSheet>, settings: Handle<GameSettings>) -> Self {
+    pub fn new(spritesheet: Handle<SpriteSheet>, settings: Handle<GameSettings>, font: Handle<FontAsset>) -> Self {
         MainMenuState {
             spritesheet,
             settings,
+            font,
         }
     }
-    pub fn new_boxed(spritesheet: Handle<SpriteSheet>, settings: Handle<GameSettings>) -> Box<Self> {
-        Box::new(MainMenuState::new(spritesheet, settings))
+    pub fn new_boxed(spritesheet: Handle<SpriteSheet>, settings: Handle<GameSettings>, font: Handle<FontAsset>) -> Box<Self> {
+        Box::new(MainMenuState::new(spritesheet, settings, font))
     }
+}
+
+fn create_test_text(world: &mut World, font: &Handle<FontAsset>, text: &str) -> Entity {
+    let transform = UiTransform::new(
+        text.to_string(), Anchor::TopMiddle, Anchor::TopMiddle,
+        -50.0, -50.0, 1.0, 800.0, 75.0,
+    );
+
+    let text = world
+        .create_entity()
+        .with(transform)
+        .with(UiText::new(
+            font.clone(),
+            text.to_string(),
+            [0.55, 0.59, 0.66, 1.0],
+            50.0,
+        )).build();
+
+        text
 }
