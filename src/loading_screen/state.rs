@@ -27,9 +27,12 @@ impl SimpleState for InitialState {
         let _dimensions = (*world.read_resource::<ScreenDimensions>()).clone();
 
         create_camera(world);
-        create_bare_sprite(world, 0.0, 0.0);
-        create_bare_sprite(world, 200.0, 500.0);
-        create_bare_sprite(world, -53.0, -64.0);
+        self.spritesheet = load_spritesheet(world, "boardgamepack/dice/diceRed");
+
+        create_sprite(world, &self.spritesheet, 1, -300.0, 158.0);
+        create_sprite(world, &self.spritesheet, 5, 200.0, 500.0);
+        create_sprite(world, &self.spritesheet, 2, -153.0, -264.0);
+        create_sprite(world, &self.spritesheet, 2, 183.0, -184.0);
     }
 
     fn handle_event(
@@ -46,15 +49,14 @@ impl SimpleState for InitialState {
     }
 }
 
-
-fn create_bare_sprite(world: &mut World, x: f32, y: f32) {
-
-    let sprite_sheet_handle = {
+fn load_spritesheet(world: &mut World, name: &str) -> Option<Handle<SpriteSheet>> {
+    
+    let handle = {
         let texture_handle = {
             let loader = world.read_resource::<Loader>();
             let texture_storage = world.read_resource::<AssetStorage<Texture>>();
             loader.load(
-                "boardgamepack/dice/diceRed.png",
+                format!("{}.png", name),
                 ImageFormat::default(),
                 (),
                 &texture_storage,
@@ -64,16 +66,22 @@ fn create_bare_sprite(world: &mut World, x: f32, y: f32) {
         let loader = world.read_resource::<Loader>();
         let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
         loader.load(
-            "boardgamepack/dice/red.ron",
+            format!("{}.ron", name),
             SpriteSheetFormat(texture_handle),
             (),
             &sprite_sheet_store,
         )
     };
+    Some(handle)
+}
+
+fn create_sprite(world: &mut World, spritesheet: &Option<Handle<SpriteSheet>>, which: usize, x: f32, y: f32) {
+
+    let sprite_sheet_handle = spritesheet.as_ref().unwrap().clone();
 
     let sprite_render = SpriteRender {
-        sprite_sheet: sprite_sheet_handle.clone(),
-        sprite_number: 5,
+        sprite_sheet: sprite_sheet_handle,
+        sprite_number: which,
     };
 
     let mut transform = Transform::default();
