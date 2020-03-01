@@ -1,0 +1,5 @@
+GameSettings(
+    width: 32,
+    height: 32,
+    area_size: 8,
+)
