@@ -1,6 +1,6 @@
 use amethyst::{
     assets::{
-        AssetStorage, Loader, ProgressCounter, Handle,
+        AssetStorage, Loader, ProgressCounter, Handle, Progress, Completion, RonFormat,
     },
     core::{transform::Transform},
     input::{is_close_requested, is_key_down, VirtualKeyCode},
@@ -18,7 +18,7 @@ use crate::config::GameSettings;
 pub struct InitialState {
     progress: ProgressCounter,
     spritesheet: Option<Handle<SpriteSheet>>,
-    settings: Option<GameSettings>,
+    settings: Option<Handle<GameSettings>>,
 }
 
 impl SimpleState for InitialState {
@@ -27,7 +27,10 @@ impl SimpleState for InitialState {
         let _dimensions = (*world.read_resource::<ScreenDimensions>()).clone();
 
         create_camera(world);
-        self.spritesheet = load_spritesheet(world, "boardgamepack/dice/diceRed");
+        self.spritesheet = load_spritesheet(world, "boardgamepack/dice/diceRed", &mut self.progress);
+
+        world.insert(AssetStorage::<GameSettings>::new());
+        self.settings = load_settings(world, "config.ron", &mut self.progress);
 
         create_sprite(world, &self.spritesheet, 1, -300.0, 158.0);
         create_sprite(world, &self.spritesheet, 5, 200.0, 500.0);
@@ -45,11 +48,40 @@ impl SimpleState for InitialState {
                 return Trans::Quit;
             }
         }
-        Trans::Switch(MainMenuState::new_boxed())
+        Trans::None
+    }
+
+    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        match self.progress.complete() {
+            Completion::Failed => {
+                println!("Failed loading assets: {:?}", self.progress.errors());
+                Trans::Quit
+            }
+            Completion::Complete => {
+                Trans::Switch(MainMenuState::new_boxed(
+                    self.spritesheet.take().unwrap(),
+                    self.settings.take().unwrap(),
+                ))
+            }
+
+            Completion::Loading => Trans::None,
+        }
     }
 }
 
-fn load_spritesheet(world: &mut World, name: &str) -> Option<Handle<SpriteSheet>> {
+fn load_settings(world: &mut World, name: &str, progress: &mut ProgressCounter ) -> Option<Handle<GameSettings>> {
+    let loader = world.read_resource::<Loader>();
+    let store = world.read_resource::<AssetStorage<GameSettings>>();
+    let settings = loader.load(
+        format!("{}.ron", name),
+        RonFormat,
+        &mut *progress,
+        &store,
+    );
+    Some(settings)
+}
+
+fn load_spritesheet(world: &mut World, name: &str, progress: &mut ProgressCounter ) -> Option<Handle<SpriteSheet>> {
     
     let handle = {
         let texture_handle = {
@@ -58,7 +90,7 @@ fn load_spritesheet(world: &mut World, name: &str) -> Option<Handle<SpriteSheet>
             loader.load(
                 format!("{}.png", name),
                 ImageFormat::default(),
-                (),
+                &mut *progress,
                 &texture_storage,
             )
         };
@@ -68,7 +100,7 @@ fn load_spritesheet(world: &mut World, name: &str) -> Option<Handle<SpriteSheet>
         loader.load(
             format!("{}.ron", name),
             SpriteSheetFormat(texture_handle),
-            (),
+            &mut *progress,
             &sprite_sheet_store,
         )
     };
