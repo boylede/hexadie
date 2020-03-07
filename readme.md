@@ -6,8 +6,10 @@ A distillation of territorial management games. Made in Rust with Amethyst for m
   - [X] display some sprites
   - [X] display some text
   - [X] let the user click on something
-  - [ ] let the user click on one sprite, enter a different state, allowing a second sprite selection or canceling the initial selection by clicking on the same one again. during this state, some sprites that could be clicked on before are no longer clickable
-  - [ ] display a stack of dice on top of some sprites
+  - [ ] draw polygons
+  - [ ] let the user click on polygons
+  - [ ] users's clicks drive state transitions for tracking current mode (select attacking region -> select target region -> repeat)
+  - [ ] display a stack of dice on top of the polygons
 - [ ] MVP Game
   - [ ] implement ui / state for number of AI player selection
   - [ ] map data structure
