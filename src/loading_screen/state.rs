@@ -32,21 +32,21 @@ impl SimpleState for InitialState {
         let _dimensions = (*world.read_resource::<ScreenDimensions>()).clone();
 
         create_camera(world);
-        let spritesheet = load_spritesheet(world, "boardgamepack/dice/diceRed", &mut self.progress);
+        
+        let dice_texture = load_asset::<Texture, ImageFormat>(world, "boardgamepack/dice/diceRed.png", ImageFormat::default(), &mut self.progress);
+        let dice_spritesheet = load_asset::<SpriteSheet, SpriteSheetFormat>(world, "boardgamepack/dice/diceRed.ron", SpriteSheetFormat(dice_texture), &mut self.progress);
         
         world.insert(AssetStorage::<GameSettings>::new());
 
-        let settings = load_settings(world, "config", &mut self.progress);
-        
-        
+        let settings = load_asset(world, "config.ron", RonFormat, &mut self.progress);
 
-        let font = load_font(world, "kenneyfonts/Kenney Future Narrow.ttf", &mut self.progress);
+        let font = load_asset(world, "kenneyfonts/Kenney Future Narrow.ttf", TtfFormat, &mut self.progress);
 
         self.settings = Some(settings);
-        self.spritesheet = Some(spritesheet);
+        self.spritesheet = Some(dice_spritesheet);
         self.font = Some(font);
 
-        <&mut ProgressCounter as Progress>::add_assets(&mut &mut self.progress, 1); // amethyst has an unchecked subtraction so we're increasing this value to get around it.
+        <&mut ProgressCounter as Progress>::add_assets(&mut &mut self.progress, 1);
         let keep_open = self.progress.create_tracker();
         self.keep_open = Some(Box::new(keep_open));
     }
@@ -146,6 +146,19 @@ fn load_font(world: &mut World, name: &str, progress: &mut ProgressCounter ) -> 
     )
 }
 
+fn load_asset<A, F>(world: &mut World, name: &str, format: F, progress: &mut ProgressCounter ) -> Handle<A> 
+where A: Asset, F: Format<<A as Asset>::Data>,
+{
+    let loader = world.read_resource::<Loader>();
+    let store = world.read_resource::<AssetStorage<A>>();
+    let asset = loader.load(
+        name,
+        format,
+        &mut *progress,
+        &store,
+    );
+    asset
+}
 impl InitialState {
     pub fn new() -> Self {
         Default::default()
