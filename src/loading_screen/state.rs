@@ -98,7 +98,7 @@ impl SimpleState for InitialState {
                         let number = complete as f32;
                         let x = number * 64.0 - 160.0;
                         let y = 32.0;
-                        self.loading_sprites.push(create_sprite(data.world, &spritesheet, complete, x, y));
+                        self.loading_sprites.push(create_sprite(data.world, &spritesheet, complete, x, y, None));
                     }
                 }
                 Trans::None

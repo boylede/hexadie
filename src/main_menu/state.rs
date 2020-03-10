@@ -26,10 +26,33 @@ impl SimpleState for MainMenuState {
         let mut world = data.world;
         let _dimensions = (*world.read_resource::<ScreenDimensions>()).clone();
         create_test_text(&mut world, &self.font, "TEST TEST TEST TEST");
-        create_sprite(&mut world, &self.spritesheet, 5, 21.0, 300.0);
-        create_sprite(&mut world, &self.spritesheet, 5, 640.0, 21.0);
-        create_sprite(&mut world, &self.spritesheet, 5, -320.0, 90.0);
+        // create_sprite(&mut world, &self.spritesheet, 5, 21.0, 300.0);
+        // create_sprite(&mut world, &self.spritesheet, 5, 640.0, 21.0);
+        // create_sprite(&mut world, &self.spritesheet, 5, -320.0, 90.0);
         create_button(&mut world, "hello world", self.font.clone());
+        // create_hexagon(&mut world, 0.0, 0.0, 400.0, self.models[0].clone());
+
+        let colors = [
+            (1.0, 0.0, 0.0),
+            (0.0, 1.0, 0.0),
+            (0.0, 0.0, 1.0),
+            (0.5, 0.5, 0.0),
+            (0.0, 0.5, 0.5),
+            (0.25, 0.25, 0.25),
+            (0.25, 0.25, 0.0),
+            (0.25, 0.0, 0.25),
+            (0.0, 0.125, 0.25),
+            (0.125, 0.25, 0.0),
+        ];
+        let mut color = colors.iter();
+        let offset = (colors.len() * 100 / 2) as f32;
+        for index in 0..colors.len() {
+            let sprite = index % 6;
+            let i = index as f32;
+            let color = color.next().cloned();
+            create_sprite(&mut world, &self.hex_sprites, sprite, 128.0 * i - offset, -64.0, color);
+        }
+        
     }
 
     fn handle_event(

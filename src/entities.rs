@@ -5,12 +5,12 @@ use amethyst::{
     core::{transform::Transform, ecs::Entity},
     input::{is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
+    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture, Transparent, resources::Tint, palette::{LinSrgba, Srgb, Srgba},},
     window::ScreenDimensions,
     ui::{Anchor, TtfFormat, UiText, UiTransform, FontAsset},
 };
 
-pub fn create_sprite(world: &mut World, spritesheet: &Handle<SpriteSheet>, which: usize, x: f32, y: f32) -> Entity {
+pub fn create_sprite(world: &mut World, spritesheet: &Handle<SpriteSheet>, which: usize, x: f32, y: f32, tint: Option<(f32, f32,f32)>) -> Entity {
 
     let sprite_sheet_handle = spritesheet.clone();
 
@@ -22,11 +22,15 @@ pub fn create_sprite(world: &mut World, spritesheet: &Handle<SpriteSheet>, which
     let mut transform = Transform::default();
     transform.set_translation_xyz(x, y, 0.0);
 
-    world
+    let mut sprite_builder = world
         .create_entity()
         .with(sprite_render)
         .with(transform)
-        .build()
+        .with(Transparent);
+    if let Some((r, g, b)) = tint {
+        sprite_builder = sprite_builder.with(Tint(Srgb::new(r, g, b).into()));
+    }
+    sprite_builder.build()
 }
 
 pub fn create_camera(world: &mut World) {
