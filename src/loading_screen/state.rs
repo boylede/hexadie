@@ -1,11 +1,12 @@
 use amethyst::{
     assets::{
+        Asset, Format,
         AssetStorage, Loader, ProgressCounter, Handle, Progress, Completion, RonFormat, Tracker,
     },
     core::{transform::Transform, ecs::Entity},
     input::{is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
+    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture, types::TextureData, Mesh, formats::mesh::ObjFormat},
     window::ScreenDimensions,
     ui::{Anchor, TtfFormat, UiText, UiTransform, FontAsset},
 };
@@ -23,6 +24,7 @@ pub struct InitialState {
     font: Option<Handle<FontAsset>>,
     settings: Option<Handle<GameSettings>>,
     loading_sprites: Vec<Entity>,
+    hex_sprites: Option<Handle<SpriteSheet>>,
     keep_open: Option<Box<dyn Tracker>>, // amethyst does not expose the required type, using dynamic dispatch to get around this.
 }
 
@@ -36,6 +38,9 @@ impl SimpleState for InitialState {
         let dice_texture = load_asset::<Texture, ImageFormat>(world, "boardgamepack/dice/diceRed.png", ImageFormat::default(), &mut self.progress);
         let dice_spritesheet = load_asset::<SpriteSheet, SpriteSheetFormat>(world, "boardgamepack/dice/diceRed.ron", SpriteSheetFormat(dice_texture), &mut self.progress);
         
+        let hex_texture = load_asset::<Texture, ImageFormat>(world, "hexes/hexes.png", ImageFormat::default(), &mut self.progress);
+        let hex_spritesheet = load_asset::<SpriteSheet, SpriteSheetFormat>(world, "hexes/hexes.ron", SpriteSheetFormat(hex_texture), &mut self.progress);
+
         world.insert(AssetStorage::<GameSettings>::new());
 
         let settings = load_asset(world, "config.ron", RonFormat, &mut self.progress);
@@ -44,6 +49,7 @@ impl SimpleState for InitialState {
 
         self.settings = Some(settings);
         self.spritesheet = Some(dice_spritesheet);
+        self.hex_sprites = Some(hex_spritesheet);
         self.font = Some(font);
 
         <&mut ProgressCounter as Progress>::add_assets(&mut &mut self.progress, 1);
@@ -78,6 +84,7 @@ impl SimpleState for InitialState {
                     self.spritesheet.take().unwrap(),
                     self.settings.take().unwrap(),
                     self.font.take().unwrap(),
+                    self.hex_sprites.take().unwrap(),
                 ))
             }
             Completion::Loading => {

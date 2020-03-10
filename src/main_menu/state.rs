@@ -3,10 +3,10 @@ use amethyst::{
         Handle,
         Loader,
     },
-    core::ecs::Entity,
+    core::{ecs::{Entity, DenseVecStorage, storage::UnprotectedStorage}, transform::{Transform}},
     input::{get_key, is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{SpriteSheet},
+    renderer::{SpriteSheet, Mesh, MaterialDefaults, Material},
     window::ScreenDimensions,
     ui::{Anchor, TtfFormat, UiText, UiTransform, FontAsset, UiButtonBuilder, Interactable, UiEvent},
 };
@@ -18,6 +18,7 @@ pub struct MainMenuState {
     spritesheet: Handle<SpriteSheet>,
     settings: Handle<GameSettings>,
     font: Handle<FontAsset>,
+    hex_sprites: Handle<SpriteSheet>,
 }
 
 impl SimpleState for MainMenuState {
@@ -69,15 +70,16 @@ impl SimpleState for MainMenuState {
 }
 
 impl MainMenuState {
-    pub fn new(spritesheet: Handle<SpriteSheet>, settings: Handle<GameSettings>, font: Handle<FontAsset>) -> Self {
+    pub fn new(spritesheet: Handle<SpriteSheet>, settings: Handle<GameSettings>, font: Handle<FontAsset>, hex_sprites: Handle<SpriteSheet>) -> Self {
         MainMenuState {
             spritesheet,
             settings,
             font,
+            hex_sprites,
         }
     }
-    pub fn new_boxed(spritesheet: Handle<SpriteSheet>, settings: Handle<GameSettings>, font: Handle<FontAsset>) -> Box<Self> {
-        Box::new(MainMenuState::new(spritesheet, settings, font))
+    pub fn new_boxed(spritesheet: Handle<SpriteSheet>, settings: Handle<GameSettings>, font: Handle<FontAsset>, hex_sprites: Handle<SpriteSheet>) -> Box<Self> {
+        Box::new(MainMenuState::new(spritesheet, settings, font, hex_sprites))
     }
 }
 
