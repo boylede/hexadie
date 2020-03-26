@@ -10,7 +10,9 @@ use amethyst::{
     ui::{Anchor, TtfFormat, UiText, UiTransform, FontAsset},
 };
 
-pub fn create_sprite(world: &mut World, spritesheet: &Handle<SpriteSheet>, which: usize, x: f32, y: f32, tint: Option<(f32, f32,f32)>) -> Entity {
+use std::f32::consts::PI;
+
+pub fn create_sprite(world: &mut World, spritesheet: &Handle<SpriteSheet>, which: usize, x: f32, y: f32, tint: Option<(f32, f32,f32)>, rotation: f32, scale: f32) -> Entity {
 
     let sprite_sheet_handle = spritesheet.clone();
 
@@ -21,6 +23,9 @@ pub fn create_sprite(world: &mut World, spritesheet: &Handle<SpriteSheet>, which
 
     let mut transform = Transform::default();
     transform.set_translation_xyz(x, y, 0.0);
+    transform.set_scale([scale, scale, scale].into());
+    
+    transform.set_rotation_2d(rotation / 180.0 * PI);
 
     let mut sprite_builder = world
         .create_entity()
