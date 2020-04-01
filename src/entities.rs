@@ -1,13 +1,10 @@
 use amethyst::{
     assets::{
-        AssetStorage, Loader, ProgressCounter, Handle, Progress, Completion, RonFormat,
+        Handle,
     },
     core::{transform::Transform, ecs::Entity},
-    input::{is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture, Transparent, resources::Tint, palette::{LinSrgba, Srgb, Srgba},},
-    window::ScreenDimensions,
-    ui::{Anchor, TtfFormat, UiText, UiTransform, FontAsset},
+    renderer::{Camera, SpriteRender, SpriteSheet, Transparent, resources::Tint, palette::Srgb,},
 };
 
 use std::f32::consts::PI;

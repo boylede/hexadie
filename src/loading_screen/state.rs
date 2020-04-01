@@ -3,12 +3,12 @@ use amethyst::{
         Asset, Format,
         AssetStorage, Loader, ProgressCounter, Handle, Progress, Completion, RonFormat, Tracker,
     },
-    core::{transform::Transform, ecs::Entity},
+    core::{ecs::Entity},
     input::{is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture, types::TextureData, Mesh, formats::mesh::ObjFormat},
+    renderer::{ImageFormat, SpriteSheet, SpriteSheetFormat, Texture, Mesh, formats::mesh::ObjFormat},
     window::ScreenDimensions,
-    ui::{Anchor, TtfFormat, UiText, UiTransform, FontAsset},
+    ui::{TtfFormat,  FontAsset},
 };
 
 use crate::main_menu::MainMenuState;
@@ -78,8 +78,9 @@ impl SimpleState for InitialState {
             }
             Completion::Complete => {
                 for ent in &self.loading_sprites {
-                    data.world.delete_entity(*ent);
+                    data.world.delete_entity(*ent).expect("Tried to delete entities twice.");
                 }
+
                 Trans::Switch(MainMenuState::new_boxed(
                     self.spritesheet.take().unwrap(),
                     self.settings.take().unwrap(),
@@ -98,7 +99,7 @@ impl SimpleState for InitialState {
                         let number = complete as f32;
                         let x = number * 64.0 - 160.0;
                         let y = 32.0;
-                        self.loading_sprites.push(create_sprite(data.world, &spritesheet, complete, x, y, None));
+                        self.loading_sprites.push(create_sprite(data.world, &spritesheet, complete, x, y, None, 0.0, 1.0));
                     }
                 }
                 Trans::None
@@ -107,51 +108,6 @@ impl SimpleState for InitialState {
     }
 }
 
-fn load_settings(world: &mut World, name: &str, progress: &mut ProgressCounter ) -> Handle<GameSettings> {
-    let loader = world.read_resource::<Loader>();
-    let store = world.read_resource::<AssetStorage<GameSettings>>();
-    let settings = loader.load(
-        format!("{}.ron", name),
-        RonFormat,
-        &mut *progress,
-        &store,
-    );
-    settings
-}
-
-fn load_spritesheet(world: &mut World, name: &str, progress: &mut ProgressCounter ) -> Handle<SpriteSheet> {
-    let handle = {
-        let texture_handle = {
-            let loader = world.read_resource::<Loader>();
-            let texture_storage = world.read_resource::<AssetStorage<Texture>>();
-            loader.load(
-                format!("{}.png", name),
-                ImageFormat::default(),
-                &mut *progress,
-                &texture_storage,
-            )
-        };
-
-        let loader = world.read_resource::<Loader>();
-        let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
-        loader.load(
-            format!("{}.ron", name),
-            SpriteSheetFormat(texture_handle),
-            &mut *progress,
-            &sprite_sheet_store,
-        )
-    };
-    handle
-}
-
-fn load_font(world: &mut World, name: &str, progress: &mut ProgressCounter ) -> Handle<FontAsset>  {
-    world.read_resource::<Loader>().load(
-        name,
-        TtfFormat,
-        (),
-        &world.read_resource(),
-    )
-}
 
 fn load_asset<A, F>(world: &mut World, name: &str, format: F, progress: &mut ProgressCounter ) -> Handle<A> 
 where A: Asset, F: Format<<A as Asset>::Data>,
