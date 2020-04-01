@@ -23,14 +23,21 @@ pub struct MainMenuState {
     font: Handle<FontAsset>,
     hex_sprites: Handle<SpriteSheet>,
     menu_items: HashMap<Entity, MenuFunction>,
+    my_ui: Vec<Entity>,
 }
 
 impl SimpleState for MainMenuState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let mut world = data.world;
         let _dimensions = (*world.read_resource::<ScreenDimensions>()).clone();
-        let menu = create_menu(&mut world, &self.font);
-        self.menu_items = menu;
+        let title = create_title_text(world, &self.font, "HEXADIE");
+        self.my_ui.push(title);
+        let menu = MenuBuilder::new(50.0, &self.font)
+            .add_button(world, "new game", Box::new(new_game))
+            .add_button(world, "settings", Box::new(settings))
+            .add_button(world, "quit", Box::new(quit));
+        self.my_ui.append(&mut menu.get_entities());
+        self.menu_items = menu.get_bindings();
         // create_hexagon(&mut world, 0.0, 0.0, 400.0, self.models[0].clone());
 
         let colors = [
@@ -52,14 +59,16 @@ impl SimpleState for MainMenuState {
             let i = index as f32;
             let color = color.next().cloned();
             let rotation = 60.0 * i;
-            create_sprite(&mut world, &self.hex_sprites, sprite, 128.0 * i - offset, -64.0, color, rotation, 0.5);
+            let ent = create_sprite(&mut world, &self.hex_sprites, sprite, 128.0 * i - offset, -64.0, color, rotation, 0.5);
+            // keep the entity reference locally so we can delete it later
+            self.my_ui.push(ent);
         }
         
     }
 
     fn handle_event(
         &mut self,
-        mut _data: StateData<'_, GameData<'_, '_>>,
+        mut data: StateData<'_, GameData<'_, '_>>,
         event: StateEvent,
     ) -> SimpleTrans {
         if let StateEvent::Window(event) = &event {
@@ -80,6 +89,9 @@ impl SimpleState for MainMenuState {
                     if let Some(transition) = self.menu_items.get_mut(target) {
                         //todo: stop carrying around these assets because it is getting difficult to pass them to new states
                         let dummy_menu = MainMenuState::new(self.spritesheet.clone(), self.settings.clone(), self.font.clone(), self.hex_sprites.clone());
+                        self.my_ui.iter().for_each(|e| {
+                            data.world.entities_mut().delete(*e).expect("tried to delete item twice.");
+                        });
                         return transition(&dummy_menu);
                     }
                 },
@@ -106,6 +118,7 @@ impl MainMenuState {
             font,
             hex_sprites,
             menu_items: Default::default(),
+            my_ui: vec![],
         }
     }
     pub fn new_boxed(spritesheet: Handle<SpriteSheet>, settings: Handle<GameSettings>, font: Handle<FontAsset>, hex_sprites: Handle<SpriteSheet>) -> Box<Self> {
@@ -177,6 +190,9 @@ impl MenuBuilder {
         self.y = self.y - self.item_height;
         self.bindings.push((entity, function));
         self
+    }
+    pub fn get_entities(&self) -> Vec<Entity> {
+        self.bindings.iter().map(|(e, _)| *e).collect()
     }
     pub fn get_bindings(self) -> HashMap<Entity, MenuFunction> {
         self.bindings.into_iter().collect()

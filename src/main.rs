@@ -17,6 +17,7 @@ use amethyst::{
 mod config;
 mod loading_screen;
 mod main_menu;
+mod map_selection;
 mod entities;
 
 use config::GameSettings;
