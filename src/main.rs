@@ -18,6 +18,7 @@ mod config;
 mod loading_screen;
 mod main_menu;
 mod map_selection;
+mod settings_screen;
 mod entities;
 mod assets;
 
