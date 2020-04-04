@@ -22,7 +22,7 @@ mod settings_screen;
 mod entities;
 mod assets;
 
-use config::GameSettings;
+use crate::config::{GameSettings, GameSettingsBundle};
 
 fn main() -> amethyst::Result<()> {
     let app_root = application_root_dir()?;
@@ -56,6 +56,7 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
+        .with_bundle(GameSettingsBundle)?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

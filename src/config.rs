@@ -2,10 +2,19 @@ use amethyst::{
     assets::{
         Handle, 
         Asset,
+        AssetStorage,
         ProcessingState,
     },
     Result,
-    core::ecs::DenseVecStorage,
+    Error,
+    core::{
+        ecs::{
+            prelude::*,
+            Entity,
+            DenseVecStorage
+        },
+        bundle::SystemBundle,
+    },
 };
 
 use serde::{Serialize, Deserialize};
@@ -26,5 +35,18 @@ impl Asset for GameSettings {
 impl From<GameSettings> for Result<ProcessingState<GameSettings>> {
     fn from(settings: GameSettings) -> Result<ProcessingState<GameSettings>> {
         Ok(ProcessingState::Loaded(settings))
+    }
+}
+
+pub struct GameSettingsBundle;
+
+impl<'a, 'b> SystemBundle<'a, 'b> for GameSettingsBundle {
+    fn build(
+        self,
+        world: &mut World,
+        _dispatcher: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<()> {
+        world.insert(AssetStorage::<GameSettings>::new());
+        Ok(())
     }
 }
