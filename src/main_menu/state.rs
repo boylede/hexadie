@@ -1,14 +1,13 @@
 use amethyst::{
     assets::{
         Handle,
-        Loader,
     },
-    core::{ecs::{Entity, DenseVecStorage, storage::UnprotectedStorage}, transform::{Transform}},
+    core::{ecs::{Entity, WriteStorage}, Hidden},
     input::{get_key, is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{SpriteSheet, Mesh, MaterialDefaults, Material},
+    renderer::{SpriteSheet},
     window::ScreenDimensions,
-    ui::{Anchor, TtfFormat, UiText, UiTransform, FontAsset, UiButtonBuilder, Interactable, UiEvent},
+    ui::{Anchor, UiText, UiTransform, FontAsset, Interactable, UiEvent},
 };
 
 use crate::config::GameSettings;
@@ -38,6 +37,31 @@ impl SimpleState for MainMenuState {
             .add_button(world, "quit", Box::new(quit));
         self.my_ui.append(&mut menu.get_entities());
         self.menu_items = menu.get_bindings();
+    }
+    fn on_stop(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        self.my_ui.iter().for_each(|e| {
+            data.world.entities_mut().delete(*e).expect("tried to delete item twice.");
+        });
+    }
+    fn on_pause(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        println!("pausing main menu");
+        data.world.exec(|(mut transform, mut hidden): (WriteStorage<UiTransform>, WriteStorage<Hidden>)| {
+            self.my_ui.iter().for_each(|e| {
+                println!("hiding {:?}", e);
+                hidden.insert(*e, Hidden).expect("unable to hide ui");
+                transform.get_mut(*e).expect("unable to hide ui").opaque = true;
+            });
+        });
+    }
+    fn on_resume(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        println!("resuming main menu");
+        data.world.exec(|(mut transform, mut hidden): (WriteStorage<UiTransform>, WriteStorage<Hidden>)| {
+            self.my_ui.iter().for_each(|e| {
+                println!("unhiding {:?}", e);
+                hidden.remove(*e);
+                transform.get_mut(*e).expect("unable to show ui").opaque = false;
+            });
+        });
     }
 
     fn handle_event(
@@ -108,16 +132,6 @@ fn quit(_w: &mut World) -> SimpleTrans {
     Trans::Quit
 }
 
-fn create_menu(world: &mut World, font: &Handle<FontAsset>) -> HashMap<Entity, MenuFunction> {
-    create_title_text(world, font, "HEXADIE");
-    let menu_items = MenuBuilder::new(50.0, font)
-        .add_button(world, "new game", Box::new(new_game))
-        .add_button(world, "settings", Box::new(settings))
-        .add_button(world, "quit", Box::new(quit))
-        .get_bindings();
-    menu_items
-}
-
 struct MenuBuilder {
     y: f32,
     item_height: f32,
@@ -141,7 +155,7 @@ impl MenuBuilder {
         // uitransform
         let transform = UiTransform::new(text.to_string(), Anchor::Middle, Anchor::Middle, 0.0, self.y, 0.0, 200.0, 50.0);
         // uitext
-        let text = UiText::new(self.font.clone(), text.to_string(), [1.0, 1.0, 1.0, 1.0], 20.0);
+        let text = UiText::new(self.font.clone(), text.to_string(), [0.1, 0.1, 0.1, 1.0], 20.0);
         let entity = world
             .create_entity()
             .with(interactable)
@@ -177,19 +191,4 @@ fn create_title_text(world: &mut World, font: &Handle<FontAsset>, text: &str) ->
         )).build();
 
         text
-}
-
-fn create_button(world: &mut World, text: &str, font: &Handle<FontAsset>) {
-    // interactable
-    
-    // uitransform
-    let transform = UiTransform::new(text.to_string(), Anchor::Middle, Anchor::Middle, 0.0, 0.0, 0.0, 200.0, 50.0);
-    // uitext
-    let text = UiText::new(font.clone(), text.to_string(), [1.0, 1.0, 1.0, 1.0], 20.0);
-    world
-        .create_entity()
-        .with(Interactable)
-        .with(transform)
-        .with(text)
-        .build();
 }
