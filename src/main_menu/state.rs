@@ -14,56 +14,30 @@ use amethyst::{
 use crate::config::GameSettings;
 use crate::entities::create_sprite;
 use crate::map_selection::MapSelectionState;
+use crate::settings_screen::SettingsState;
+use crate::assets::HexAssets;
 
 use std::collections::HashMap;
 
 pub struct MainMenuState {
-    spritesheet: Handle<SpriteSheet>,
-    settings: Handle<GameSettings>,
-    font: Handle<FontAsset>,
-    hex_sprites: Handle<SpriteSheet>,
     menu_items: HashMap<Entity, MenuFunction>,
     my_ui: Vec<Entity>,
 }
 
 impl SimpleState for MainMenuState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        let mut world = data.world;
+        let world = data.world;
         let _dimensions = (*world.read_resource::<ScreenDimensions>()).clone();
-        let title = create_title_text(world, &self.font, "HEXADIE");
+        let assets = (*world.read_resource::<HexAssets>()).clone();
+
+        let title = create_title_text(world, &assets.font, "HEXADIE");
         self.my_ui.push(title);
-        let menu = MenuBuilder::new(50.0, &self.font)
+        let menu = MenuBuilder::new(50.0, &assets.font)
             .add_button(world, "new game", Box::new(new_game))
             .add_button(world, "settings", Box::new(settings))
             .add_button(world, "quit", Box::new(quit));
         self.my_ui.append(&mut menu.get_entities());
         self.menu_items = menu.get_bindings();
-        // create_hexagon(&mut world, 0.0, 0.0, 400.0, self.models[0].clone());
-
-        let colors = [
-            (1.0, 0.0, 0.0),
-            (0.0, 1.0, 0.0),
-            (0.0, 0.0, 1.0),
-            (0.5, 0.5, 0.0),
-            (0.0, 0.5, 0.5),
-            (0.25, 0.25, 0.25),
-            (0.25, 0.25, 0.0),
-            (0.25, 0.0, 0.25),
-            (0.0, 0.125, 0.25),
-            (0.125, 0.25, 0.0),
-        ];
-        let mut color = colors.iter();
-        let offset = (colors.len() * 100 / 2) as f32;
-        for index in 0..colors.len() {
-            let sprite = index % 6;
-            let i = index as f32;
-            let color = color.next().cloned();
-            let rotation = 60.0 * i;
-            let ent = create_sprite(&mut world, &self.hex_sprites, sprite, 128.0 * i - offset, -64.0, color, rotation, 0.5);
-            // keep the entity reference locally so we can delete it later
-            self.my_ui.push(ent);
-        }
-        
     }
 
     fn handle_event(
@@ -81,6 +55,7 @@ impl SimpleState for MainMenuState {
             }
         }
         if let StateEvent::Ui(event) = &event {
+            
             use amethyst::ui::UiEventType::*;
             let UiEvent{event_type, target} = event;
             match event_type {
@@ -88,11 +63,7 @@ impl SimpleState for MainMenuState {
                     println!("Clicked! {:?}", target);
                     if let Some(transition) = self.menu_items.get_mut(target) {
                         //todo: stop carrying around these assets because it is getting difficult to pass them to new states
-                        let dummy_menu = MainMenuState::new(self.spritesheet.clone(), self.settings.clone(), self.font.clone(), self.hex_sprites.clone());
-                        self.my_ui.iter().for_each(|e| {
-                            data.world.entities_mut().delete(*e).expect("tried to delete item twice.");
-                        });
-                        return transition(&dummy_menu);
+                        return transition(&mut data.world);
                     }
                 },
                 HoverStart => {
@@ -111,39 +82,29 @@ impl SimpleState for MainMenuState {
 }
 
 impl MainMenuState {
-    pub fn new(spritesheet: Handle<SpriteSheet>, settings: Handle<GameSettings>, font: Handle<FontAsset>, hex_sprites: Handle<SpriteSheet>) -> Self {
+    pub fn new() -> Self {
         MainMenuState {
-            spritesheet,
-            settings,
-            font,
-            hex_sprites,
             menu_items: Default::default(),
             my_ui: vec![],
         }
     }
-    pub fn new_boxed(spritesheet: Handle<SpriteSheet>, settings: Handle<GameSettings>, font: Handle<FontAsset>, hex_sprites: Handle<SpriteSheet>) -> Box<Self> {
-        Box::new(MainMenuState::new(spritesheet, settings, font, hex_sprites))
+    pub fn new_boxed() -> Box<Self> {
+        Box::new(MainMenuState::new())
     }
 }
 
-type MenuFunction = Box<(Fn(&MainMenuState) -> SimpleTrans)>;
+type MenuFunction = Box<fn(world: &mut World) -> SimpleTrans>;
 
-fn new_game(main_menu: &MainMenuState) -> SimpleTrans {
-    // todo remove main menu's items from the world
-    let map = MapSelectionState::new_boxed(
-        main_menu.spritesheet.clone(),
-        main_menu.settings.clone(),
-        main_menu.font.clone(),
-        main_menu.hex_sprites.clone(),
-    );
+fn new_game(_w: &mut World) -> SimpleTrans {
+    let map = MapSelectionState::new_boxed();
     Trans::Switch(map)
 }
 
-fn settings(main_menu: &MainMenuState) -> SimpleTrans {
-    Trans::Quit
+fn settings(_w: &mut World) -> SimpleTrans {
+    Trans::Push(SettingsState::new_boxed())
 }
 
-fn quit(main_menu: &MainMenuState) -> SimpleTrans {
+fn quit(_w: &mut World) -> SimpleTrans {
     Trans::Quit
 }
 

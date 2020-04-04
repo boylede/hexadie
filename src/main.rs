@@ -19,6 +19,7 @@ mod loading_screen;
 mod main_menu;
 mod map_selection;
 mod entities;
+mod assets;
 
 use config::GameSettings;
 

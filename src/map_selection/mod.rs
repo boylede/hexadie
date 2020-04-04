@@ -13,20 +13,17 @@ use amethyst::{
 
 use crate::config::GameSettings;
 use crate::entities::create_sprite;
+use crate::assets::HexAssets;
 
 pub struct MapSelectionState {
-    spritesheet: Handle<SpriteSheet>,
-    settings: Handle<GameSettings>,
-    font: Handle<FontAsset>,
-    hex_sprites: Handle<SpriteSheet>,
-    // models: Vec<Handle<Mesh>>,
 }
 
 impl SimpleState for MapSelectionState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let mut world = data.world;
         let _dimensions = (*world.read_resource::<ScreenDimensions>()).clone();
-        create_title_text(world, &self.font, "TESTADIE");
+        let assets = (*world.read_resource::<HexAssets>()).clone();
+        create_title_text(world, &assets.font, "Map Selection");
     }
 
     fn handle_event(
@@ -67,17 +64,11 @@ impl SimpleState for MapSelectionState {
 }
 
 impl MapSelectionState {
-    pub fn new(spritesheet: Handle<SpriteSheet>, settings: Handle<GameSettings>, font: Handle<FontAsset>, hex_sprites: Handle<SpriteSheet>) -> Self {
-        MapSelectionState {
-            spritesheet,
-            settings,
-            font,
-            hex_sprites,
-            // models,
-        }
+    pub fn new() -> Self {
+        MapSelectionState {}
     }
-    pub fn new_boxed(spritesheet: Handle<SpriteSheet>, settings: Handle<GameSettings>, font: Handle<FontAsset>, hex_sprites: Handle<SpriteSheet>) -> Box<Self> {
-        Box::new(MapSelectionState::new(spritesheet, settings, font, hex_sprites))
+    pub fn new_boxed() -> Box<Self> {
+        Box::new(MapSelectionState::new())
     }
 }
 

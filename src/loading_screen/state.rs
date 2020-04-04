@@ -14,17 +14,14 @@ use amethyst::{
 use crate::main_menu::MainMenuState;
 use crate::config::GameSettings;
 use crate::entities::{create_sprite, create_camera};
+use crate::assets::HexAssets;
 
 /// The initial state will load any needed assets, and set them up in the world as needed. It will display a progress bar and loading text. Once loading is complete, we pass to the main menu state.
-
 #[derive(Default)]
 pub struct InitialState {
     progress: ProgressCounter,
-    spritesheet: Option<Handle<SpriteSheet>>,
-    font: Option<Handle<FontAsset>>,
-    settings: Option<Handle<GameSettings>>,
     loading_sprites: Vec<Entity>,
-    hex_sprites: Option<Handle<SpriteSheet>>,
+    spritesheet: Option<Handle<SpriteSheet>>,
     keep_open: Option<Box<dyn Tracker>>, // amethyst does not expose the required type, using dynamic dispatch to get around this.
 }
 
@@ -47,14 +44,18 @@ impl SimpleState for InitialState {
 
         let font = load_asset(world, "kenneyfonts/Kenney Future Narrow.ttf", TtfFormat, &mut self.progress);
 
-        self.settings = Some(settings);
-        self.spritesheet = Some(dice_spritesheet);
-        self.hex_sprites = Some(hex_spritesheet);
-        self.font = Some(font);
+        self.spritesheet = Some(dice_spritesheet.clone());
 
         <&mut ProgressCounter as Progress>::add_assets(&mut &mut self.progress, 1);
         let keep_open = self.progress.create_tracker();
         self.keep_open = Some(Box::new(keep_open));
+        let assets: HexAssets =  HexAssets {
+            spritesheet: dice_spritesheet,
+            font,
+            settings,
+            hex_sprites: hex_spritesheet,
+        };
+        world.insert(assets);
     }
 
     fn handle_event(
@@ -81,12 +82,7 @@ impl SimpleState for InitialState {
                     data.world.delete_entity(*ent).expect("Tried to delete entities twice.");
                 }
 
-                Trans::Switch(MainMenuState::new_boxed(
-                    self.spritesheet.take().unwrap(),
-                    self.settings.take().unwrap(),
-                    self.font.take().unwrap(),
-                    self.hex_sprites.take().unwrap(),
-                ))
+                Trans::Switch(MainMenuState::new_boxed())
             }
             Completion::Loading => {
                 let spritesheet = &self.spritesheet;
@@ -107,7 +103,6 @@ impl SimpleState for InitialState {
         }
     }
 }
-
 
 fn load_asset<A, F>(world: &mut World, name: &str, format: F, progress: &mut ProgressCounter ) -> Handle<A> 
 where A: Asset, F: Format<<A as Asset>::Data>,
