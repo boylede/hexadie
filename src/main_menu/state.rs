@@ -23,6 +23,7 @@ pub struct MainMenuState {
     my_ui: Vec<Entity>,
 }
 
+const EXPECTED: &'static str = "Expected UI entity or component not found (main_menu).";
 impl SimpleState for MainMenuState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
@@ -40,26 +41,24 @@ impl SimpleState for MainMenuState {
     }
     fn on_stop(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         self.my_ui.iter().for_each(|e| {
-            data.world.entities_mut().delete(*e).expect("tried to delete item twice.");
+            data.world.entities_mut().delete(*e).expect(EXPECTED);
         });
     }
     fn on_pause(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        println!("pausing main menu");
         data.world.exec(|(mut transform, mut hidden): (WriteStorage<UiTransform>, WriteStorage<Hidden>)| {
             self.my_ui.iter().for_each(|e| {
-                println!("hiding {:?}", e);
-                hidden.insert(*e, Hidden).expect("unable to hide ui");
-                transform.get_mut(*e).expect("unable to hide ui").opaque = true;
+                hidden.insert(*e, Hidden).expect(EXPECTED);
+                transform.get_mut(*e).expect(EXPECTED).opaque = false;
             });
         });
     }
     fn on_resume(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        println!("resuming main menu");
         data.world.exec(|(mut transform, mut hidden): (WriteStorage<UiTransform>, WriteStorage<Hidden>)| {
             self.my_ui.iter().for_each(|e| {
-                println!("unhiding {:?}", e);
                 hidden.remove(*e);
-                transform.get_mut(*e).expect("unable to show ui").opaque = false;
+                let t = transform.get_mut(*e).expect(EXPECTED);
+                t.opaque = true;
+                
             });
         });
     }
@@ -84,9 +83,7 @@ impl SimpleState for MainMenuState {
             let UiEvent{event_type, target} = event;
             match event_type {
                 Click => {
-                    println!("Clicked! {:?}", target);
                     if let Some(transition) = self.menu_items.get_mut(target) {
-                        //todo: stop carrying around these assets because it is getting difficult to pass them to new states
                         return transition(&mut data.world);
                     }
                 },
