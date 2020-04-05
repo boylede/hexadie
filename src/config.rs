@@ -21,9 +21,10 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct GameSettings {
-    width: u32,
-    height: u32,
-    area_size: u32,
+    pub width: u32,
+    pub height: u32,
+    pub area_size: u32,
+    pub player_count: Option<u32>,
 }
 
 impl Asset for GameSettings {
