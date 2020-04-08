@@ -10,7 +10,9 @@ use amethyst::{
             DenseVecStorage,
             Component,
             Entities,
-            WriteStorage
+            Join,
+            WriteStorage,
+            ReadStorage,
         },
         transform::{
             Transform
@@ -18,7 +20,7 @@ use amethyst::{
     },
     input::{get_key, is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{SpriteSheet, Mesh, MaterialDefaults, Material, SpriteRender, Transparent},
+    renderer::{Camera, SpriteSheet, Mesh, MaterialDefaults, Material, SpriteRender, Transparent, resources::Tint, palette::Srgb},
     window::ScreenDimensions,
     ui::{Anchor, TtfFormat, UiText, UiTransform, FontAsset, UiButtonBuilder, Interactable, UiEvent},
 };
@@ -26,6 +28,8 @@ use amethyst::{
 use crate::config::GameSettings;
 use crate::entities::create_sprite;
 use crate::assets::HexAssets;
+
+use rand::{Rng, thread_rng};
 
 pub struct MapSelectionState {
 }
@@ -37,6 +41,7 @@ impl SimpleState for MapSelectionState {
         let assets = (*world.read_resource::<HexAssets>()).clone();
 
         world.register::<Hexagon>();
+        world.register::<Player>();
 
         create_title_text(world, &assets.font, "Map Selection");
         create_map(world);
@@ -142,9 +147,13 @@ fn create_map(world: &mut World) {
             }
         });
 
+    }
 
     println!("making map {}x{} = {}, with {} hexes in {} territories", width, height, overall_area, hex_count, territory_count);
 
+    // generate a number of hexagon entities
+    // these will be combined into groups of area_size hexes
+    // called areas
     let mut hex_list = vec![];
     // world.exec(|(mut entities, mut hexagons): (Entities, WriteStorage<Hexagon>)| {
     for x in 0..width {
@@ -165,7 +174,9 @@ fn create_map(world: &mut World) {
                 sprite_number: 0,
             };
             let mut transform = Transform::default();
-            transform.set_translation_xyz(x * hex_offset_x + even_column_offset.0, y * hex_offset_y + even_column_offset.1, 0.0);
+            let x = (x * hex_offset_x + even_column_offset.0) * scale;
+            let y = (y * hex_offset_y + even_column_offset.1) * scale;
+            transform.set_translation_xyz(x, y, 0.0);
             transform.set_scale([scale, scale, scale].into());
             // transform.set_rotation_2d(rotation / 180.0 * PI);
 
@@ -175,20 +186,72 @@ fn create_map(world: &mut World) {
                 init: None,
             };
 
-            let mut sprite_builder = world
+            let mut hex_builder = world
                 .create_entity()
                 .with(sprite_render)
                 .with(transform)
                 .with(hexagon)
+                .with(Tint(Srgb::new(0.2, 0.2, 0.2).into()))
                 .with(Transparent);
             // if let Some((r, g, b)) = tint {
-            //     sprite_builder = sprite_builder.with(Tint(Srgb::new(r, g, b).into()));
+            // hex_builder = hex_builder.with(Tint(Srgb::new(0.2, 0.2, 0.2).into()));
             // }
-            let hex = sprite_builder.build();
+            let hex = hex_builder.build();
             hex_list.push(hex);
         }
     }        
-    // });
+ 
+    // randomly select territory_count hexes to seed the map
+    let mut rng = thread_rng();
+    let mut players = world.write_storage::<Player>();
+    println!("randomly placing initial areas");
+    for country in 0..territory_count {
+        let x = rng.gen_range(0, width) as usize;
+        let y = rng.gen_range(0, height) as usize;
+        println!("picking area {},{}, which is index {} out of {}", x, y, y * width as usize + x, hex_list.len());
+        let hex = hex_list.get(y * width as usize + x).unwrap();
+        println!("initializing area {}", country);
+        
+        let player = match country % player_count {
+            0 => Player::One,
+            1 => Player::Two,
+            2 => Player::Three,
+            3 => Player::Four,
+            4 => Player::Five,
+            5 => Player::Six,
+            6 => Player::Seven,
+            7 => Player::Eight,
+            // 8 => Player::Nine,
+            _ => panic!("modulo overran allowed player count"),
+        };
+        players.insert(*hex, player);
+    }
+
+    // flood fill the map until each area has area_size hexes
+
+
+
+    // color each hex according to which player it represents
+    let mut tints = world.write_storage::<Tint>();
+    // let tint = tints.get_mut(*hex);
+    for (mut tint, player) in (&mut tints, &players).join() {
+        use Player::*;
+        let color = match player {
+            One => Srgb::new(0.306, 0.804, 0.769),
+            Two => Srgb::new(0.780, 0.957, 0.392),
+            Three => Srgb::new(1.0, 0.420, 0.420),
+            Four => Srgb::new(0.769, 0.302, 0.345),
+            Five => Srgb::new(0.333, 0.384, 0.439),
+            Six => Srgb::new(0.286, 0.039, 0.239),
+            Seven => Srgb::new(0.741, 0.082, 0.314),
+            Eight => Srgb::new(0.914, 0.498, 0.008),
+            // Nine => Srgb::new(0.973, 0.792, 0.0),
+            // Ten => Srgb::new(0.541, 0.608, 0.059),
+        };
+        *tint = Tint(color.into());
+
+        println!("tint: {:?}", tint);
+    }
 
     
 
@@ -196,6 +259,8 @@ fn create_map(world: &mut World) {
 
 }
 
+/// the Hexagon component is the basic building block of the game board.
+/// 
 struct Hexagon {
     x: f32,
     y: f32,
@@ -213,6 +278,7 @@ impl Component for Hexagon {
     type Storage = DenseVecStorage<Self>;
 }
 
+/// The Player component will enumerate which player any enitity (just hexes for now) belongs to.
 enum Player {
     One,
     Two,
@@ -222,4 +288,16 @@ enum Player {
     Six,
     Seven,
     Eight,
+}
+
+impl Component for Player {
+    type Storage = DenseVecStorage<Self>;
+}
+/// The Area component will store the id of the area to which each hex belongs.
+struct Area {
+    id: usize,
+}
+
+impl Component for Area {
+    type Storage = DenseVecStorage<Self>;
 }
