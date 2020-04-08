@@ -132,6 +132,15 @@ fn create_map(world: &mut World) {
     let hex_offset_x = 49.0;
     let scale = 1.0;
 
+    {
+        let camera = assets.camera;
+        world.exec(|(mut transforms, cameras): (WriteStorage<Transform>, ReadStorage<Camera>)| {
+            for (mut transform, camera) in (&mut transforms, &cameras).join() {
+                let width = width as f32 * hex_offset_x * scale;
+                let height = height as f32 * hex_offset_y * scale;
+                transform.set_translation_xyz(width / 2.0, height / 2.0, 1.0);
+            }
+        });
 
 
     println!("making map {}x{} = {}, with {} hexes in {} territories", width, height, overall_area, hex_count, territory_count);

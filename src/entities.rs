@@ -35,7 +35,7 @@ pub fn create_sprite(world: &mut World, spritesheet: &Handle<SpriteSheet>, which
     sprite_builder.build()
 }
 
-pub fn create_camera(world: &mut World) {
+pub fn create_camera(world: &mut World) -> Entity {
     let mut transform = Transform::default();
     transform.set_translation_xyz(0.0, 0.0, 1.0);
 
@@ -43,5 +43,5 @@ pub fn create_camera(world: &mut World) {
         .create_entity()
         .with(Camera::standard_2d(1600.0, 1600.0))
         .with(transform)
-        .build();
+        .build()
 }

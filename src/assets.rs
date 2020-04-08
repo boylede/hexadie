@@ -21,5 +21,6 @@ pub struct HexAssets {
     pub font: Handle<FontAsset>,
     pub settings: Handle<GameSettings>,
     pub hex_sprites: Handle<SpriteSheet>,
+    pub camera: Entity,
 }
 

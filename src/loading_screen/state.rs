@@ -30,7 +30,7 @@ impl SimpleState for InitialState {
         let world = data.world;
         let _dimensions = (*world.read_resource::<ScreenDimensions>()).clone();
 
-        create_camera(world);
+        let camera = create_camera(world);
         
         let dice_texture = load_asset::<Texture, ImageFormat>(world, "boardgamepack/dice/diceRed.png", ImageFormat::default(), &mut self.progress);
         let dice_spritesheet = load_asset::<SpriteSheet, SpriteSheetFormat>(world, "boardgamepack/dice/diceRed.ron", SpriteSheetFormat(dice_texture), &mut self.progress);
@@ -54,6 +54,7 @@ impl SimpleState for InitialState {
             font,
             settings,
             hex_sprites: hex_spritesheet,
+            camera: camera,
         };
         world.insert(assets);
     }
