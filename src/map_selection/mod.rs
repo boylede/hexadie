@@ -205,6 +205,7 @@ fn create_map(world: &mut World) {
     let mut rng = thread_rng();
     let mut players = world.write_storage::<Player>();
     println!("randomly placing initial areas");
+    let mut areas: HashMap<Entity, (u32, Player, bool)> = HashMap::new();
     for country in 0..territory_count {
         let x = rng.gen_range(0, width) as usize;
         let y = rng.gen_range(0, height) as usize;
@@ -225,11 +226,26 @@ fn create_map(world: &mut World) {
             _ => panic!("modulo overran allowed player count"),
         };
         players.insert(*hex, player);
+        areas.insert(*hex, (1, player, false));
     }
 
     // flood fill the map until each area has area_size hexes
+    while areas.iter().any(|(_origin, (size, _player, blocked))| *size < area_size && !blocked) {
+        let mut working_areas = areas.iter()
+        .filter(|(_origin, (size, _player, blocked))| *size < area_size && !blocked)
+        .collect::<Vec<(&Entity, &(u32, Player, bool))>>();
+        working_areas.sort_by(|a, b| {
+            a.0.cmp(b.0)
+        });
+        let next_area = working_areas.iter().next();
+        // get this area's neighbor hexes
+
+        // check if they are occupied
+        // add one of them to this area
+        // if all are occupied, mark this area as blocked
 
 
+    }
 
     // color each hex according to which player it represents
     let mut tints = world.write_storage::<Tint>();
