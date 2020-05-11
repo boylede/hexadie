@@ -1,20 +1,22 @@
 use amethyst::{
     assets::{
-        Asset, Format,
-        AssetStorage, Loader, ProgressCounter, Handle, Progress, Completion, RonFormat, Tracker,
+        Asset, AssetStorage, Completion, Format, Handle, Loader, Progress, ProgressCounter,
+        RonFormat, Tracker,
     },
-    core::{ecs::Entity},
+    core::ecs::Entity,
     input::{is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{ImageFormat, SpriteSheet, SpriteSheetFormat, Texture, Mesh, formats::mesh::ObjFormat},
+    renderer::{
+        formats::mesh::ObjFormat, ImageFormat, Mesh, SpriteSheet, SpriteSheetFormat, Texture,
+    },
+    ui::{FontAsset, TtfFormat},
     window::ScreenDimensions,
-    ui::{TtfFormat,  FontAsset},
 };
 
-use crate::main_menu::MainMenuState;
-use crate::config::GameSettings;
-use crate::entities::{create_sprite, create_camera};
 use crate::assets::HexAssets;
+use crate::config::GameSettings;
+use crate::entities::{create_camera, create_sprite};
+use crate::main_menu::MainMenuState;
 
 /// The initial state will load any needed assets, and set them up in the world as needed. It will display a progress bar and loading text. Once loading is complete, we pass to the main menu state.
 #[derive(Default)]
@@ -31,18 +33,43 @@ impl SimpleState for InitialState {
         let _dimensions = (*world.read_resource::<ScreenDimensions>()).clone();
 
         let camera = create_camera(world);
-        
-        let dice_texture = load_asset::<Texture, ImageFormat>(world, "boardgamepack/dice/diceRed.png", ImageFormat::default(), &mut self.progress);
-        let dice_spritesheet = load_asset::<SpriteSheet, SpriteSheetFormat>(world, "boardgamepack/dice/diceRed.ron", SpriteSheetFormat(dice_texture), &mut self.progress);
-        
-        let hex_texture = load_asset::<Texture, ImageFormat>(world, "hexes/hexes.png", ImageFormat::default(), &mut self.progress);
-        let hex_spritesheet = load_asset::<SpriteSheet, SpriteSheetFormat>(world, "hexes/hexes.ron", SpriteSheetFormat(hex_texture), &mut self.progress);
+
+        let dice_texture = load_asset::<Texture, ImageFormat>(
+            world,
+            "boardgamepack/dice/diceRed.png",
+            ImageFormat::default(),
+            &mut self.progress,
+        );
+        let dice_spritesheet = load_asset::<SpriteSheet, SpriteSheetFormat>(
+            world,
+            "boardgamepack/dice/diceRed.ron",
+            SpriteSheetFormat(dice_texture),
+            &mut self.progress,
+        );
+
+        let hex_texture = load_asset::<Texture, ImageFormat>(
+            world,
+            "hexes/hexes.png",
+            ImageFormat::default(),
+            &mut self.progress,
+        );
+        let hex_spritesheet = load_asset::<SpriteSheet, SpriteSheetFormat>(
+            world,
+            "hexes/hexes.ron",
+            SpriteSheetFormat(hex_texture),
+            &mut self.progress,
+        );
 
         world.insert(AssetStorage::<GameSettings>::new());
 
         let settings = load_asset(world, "config.ron", RonFormat, &mut self.progress);
 
-        let font = load_asset(world, "kenneyfonts/Kenney Future Narrow.ttf", TtfFormat, &mut self.progress);
+        let font = load_asset(
+            world,
+            "kenneyfonts/Kenney Future Narrow.ttf",
+            TtfFormat,
+            &mut self.progress,
+        );
 
         self.spritesheet = Some(dice_spritesheet.clone());
 
@@ -80,7 +107,9 @@ impl SimpleState for InitialState {
             }
             Completion::Complete => {
                 for ent in &self.loading_sprites {
-                    data.world.delete_entity(*ent).expect("Tried to delete entities twice.");
+                    data.world
+                        .delete_entity(*ent)
+                        .expect("Tried to delete entities twice.");
                 }
 
                 Trans::Switch(MainMenuState::new_boxed())
@@ -96,26 +125,37 @@ impl SimpleState for InitialState {
                         let number = complete as f32;
                         let x = number * 64.0 - 160.0;
                         let y = 32.0;
-                        self.loading_sprites.push(create_sprite(data.world, &spritesheet, complete, x, y, None, 0.0, 1.0));
+                        self.loading_sprites.push(create_sprite(
+                            data.world,
+                            &spritesheet,
+                            complete,
+                            x,
+                            y,
+                            None,
+                            0.0,
+                            1.0,
+                        ));
                     }
                 }
                 Trans::None
-            },
+            }
         }
     }
 }
 
-fn load_asset<A, F>(world: &mut World, name: &str, format: F, progress: &mut ProgressCounter ) -> Handle<A> 
-where A: Asset, F: Format<<A as Asset>::Data>,
+fn load_asset<A, F>(
+    world: &mut World,
+    name: &str,
+    format: F,
+    progress: &mut ProgressCounter,
+) -> Handle<A>
+where
+    A: Asset,
+    F: Format<<A as Asset>::Data>,
 {
     let loader = world.read_resource::<Loader>();
     let store = world.read_resource::<AssetStorage<A>>();
-    let asset = loader.load(
-        name,
-        format,
-        &mut *progress,
-        &store,
-    );
+    let asset = loader.load(name, format, &mut *progress, &store);
     asset
 }
 impl InitialState {

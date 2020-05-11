@@ -1,16 +1,22 @@
 use amethyst::{
-    assets::{
-        Handle,
-    },
-    core::{transform::Transform, ecs::Entity},
+    assets::Handle,
+    core::{ecs::Entity, transform::Transform},
     prelude::*,
-    renderer::{Camera, SpriteRender, SpriteSheet, Transparent, resources::Tint, palette::Srgb,},
+    renderer::{palette::Srgb, resources::Tint, Camera, SpriteRender, SpriteSheet, Transparent},
 };
 
 use std::f32::consts::PI;
 
-pub fn create_sprite(world: &mut World, spritesheet: &Handle<SpriteSheet>, which: usize, x: f32, y: f32, tint: Option<(f32, f32,f32)>, rotation: f32, scale: f32) -> Entity {
-
+pub fn create_sprite(
+    world: &mut World,
+    spritesheet: &Handle<SpriteSheet>,
+    which: usize,
+    x: f32,
+    y: f32,
+    tint: Option<(f32, f32, f32)>,
+    rotation: f32,
+    scale: f32,
+) -> Entity {
     let sprite_sheet_handle = spritesheet.clone();
 
     let sprite_render = SpriteRender {
@@ -21,7 +27,7 @@ pub fn create_sprite(world: &mut World, spritesheet: &Handle<SpriteSheet>, which
     let mut transform = Transform::default();
     transform.set_translation_xyz(x, y, 0.0);
     transform.set_scale([scale, scale, scale].into());
-    
+
     transform.set_rotation_2d(rotation / 180.0 * PI);
 
     let mut sprite_builder = world

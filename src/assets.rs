@@ -1,16 +1,18 @@
 use amethyst::{
-    DataDispose, DataInit, GameDataBuilder,
     assets::{
-        Asset, Format,
-        AssetStorage, Loader, ProgressCounter, Handle, Progress, Completion, RonFormat, Tracker,
+        Asset, AssetStorage, Completion, Format, Handle, Loader, Progress, ProgressCounter,
+        RonFormat, Tracker,
     },
-    core::{ecs::Entity},
+    core::ecs::Entity,
+    ecs::prelude::Dispatcher,
     input::{is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{ImageFormat, SpriteSheet, SpriteSheetFormat, Texture, Mesh, formats::mesh::ObjFormat},
+    renderer::{
+        formats::mesh::ObjFormat, ImageFormat, Mesh, SpriteSheet, SpriteSheetFormat, Texture,
+    },
+    ui::{FontAsset, TtfFormat},
     window::ScreenDimensions,
-    ui::{TtfFormat,  FontAsset},
-    ecs::prelude::Dispatcher,
+    DataDispose, DataInit, GameDataBuilder,
 };
 
 use crate::config::GameSettings;

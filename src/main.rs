@@ -1,26 +1,26 @@
 use amethyst::{
     assets::Processor,
     core::transform::TransformBundle,
+    input::{InputBundle, StringBindings},
     prelude::*,
     renderer::{
-        plugins::{RenderFlat2D, RenderToWindow},
+        plugins::{RenderFlat2D, RenderFlat3D, RenderToWindow},
         types::DefaultBackend,
         RenderingBundle,
     },
-    input::{StringBindings, InputBundle},
-    window::DisplayConfig,
+    ui::{RenderUi, UiBundle},
     utils::application_root_dir,
-    LoggerConfig, StdoutLog, LogLevelFilter,
-    ui::{RenderUi, UiBundle}
+    window::DisplayConfig,
+    LogLevelFilter, LoggerConfig, StdoutLog,
 };
 
+mod assets;
 mod config;
+mod entities;
 mod loading_screen;
 mod main_menu;
 mod map_selection;
 mod settings_screen;
-mod entities;
-mod assets;
 
 use crate::config::{GameSettings, GameSettingsBundle};
 
@@ -60,19 +60,14 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config(display_config)
-                        .with_clear([0.68, 0.78, 0.76, 1.0]),
+                    RenderToWindow::from_config(display_config).with_clear([0.68, 0.78, 0.76, 1.0]),
                 )
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderUi::default())
         )?
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?
-        .with(
-            Processor::<GameSettings>::new(),
-            "settings_processor",
-            &[],
-        );
+        .with(Processor::<GameSettings>::new(), "settings_processor", &[]);
 
     let mut game = Application::new(assets_path, loading_screen::InitialState::new(), game_data)?;
     game.run();

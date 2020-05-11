@@ -1,19 +1,17 @@
 use amethyst::{
-    assets::{
-        Handle,
-    },
-    core::{ecs::{Entity}},
+    assets::Handle,
+    core::ecs::Entity,
     input::{get_key, is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{SpriteSheet},
+    renderer::SpriteSheet,
+    ui::{Anchor, FontAsset, Interactable, UiEvent, UiText, UiTransform},
     window::ScreenDimensions,
-    ui::{Anchor, UiText, UiTransform, FontAsset, Interactable, UiEvent},
 };
 
+use crate::assets::HexAssets;
 use crate::config::GameSettings;
 use crate::entities::create_sprite;
 use crate::map_selection::MapSelectionState;
-use crate::assets::HexAssets;
 
 use std::collections::HashMap;
 
@@ -64,7 +62,7 @@ impl SimpleState for SettingsState {
         }
         if let StateEvent::Ui(event) = &event {
             use amethyst::ui::UiEventType::*;
-            let UiEvent{event_type, target} = event;
+            let UiEvent { event_type, target } = event;
             match event_type {
                 Click => {
                     println!("Clicked! {:?}", target);
@@ -73,10 +71,10 @@ impl SimpleState for SettingsState {
                     } else {
                         println!("clicked on something with no function? items available: {:?}\n\n", self.menu_items.keys());
                     }
-                },
+                }
                 HoverStart => {
                     println!("hovered on {:?}", target);
-                },
+                }
                 HoverStop => {
                     println!("hovered off {:?}", target);
                 }
@@ -134,14 +132,33 @@ impl MenuBuilder {
             bindings: vec![],
         }
     }
-    pub fn add_button(mut self, world: &mut World, text: &str, function: MenuFunction) -> MenuBuilder {
+    pub fn add_button(
+        mut self,
+        world: &mut World,
+        text: &str,
+        function: MenuFunction,
+    ) -> MenuBuilder {
         // needed components
         // interactable
         let interactable = Interactable;
         // uitransform
-        let transform = UiTransform::new(text.to_string(), Anchor::Middle, Anchor::Middle, 0.0, self.y, 0.0, 200.0, 50.0);
+        let transform = UiTransform::new(
+            text.to_string(),
+            Anchor::Middle,
+            Anchor::Middle,
+            0.0,
+            self.y,
+            0.0,
+            200.0,
+            50.0,
+        );
         // uitext
-        let text = UiText::new(self.font.clone(), text.to_string(), [0.1, 0.1, 0.1, 1.0], 20.0);
+        let text = UiText::new(
+            self.font.clone(),
+            text.to_string(),
+            [0.1, 0.1, 0.1, 1.0],
+            20.0,
+        );
         let entity = world
             .create_entity()
             .with(interactable)
@@ -162,8 +179,14 @@ impl MenuBuilder {
 
 fn create_title_text(world: &mut World, font: &Handle<FontAsset>, text: &str) -> Entity {
     let transform = UiTransform::new(
-        text.to_string(), Anchor::TopMiddle, Anchor::TopMiddle,
-        0.0, -100.0, 1.0, 800.0, 75.0,
+        text.to_string(),
+        Anchor::TopMiddle,
+        Anchor::TopMiddle,
+        0.0,
+        -100.0,
+        1.0,
+        800.0,
+        75.0,
     );
 
     let text = world
@@ -174,7 +197,8 @@ fn create_title_text(world: &mut World, font: &Handle<FontAsset>, text: &str) ->
             text.to_string(),
             [0.1, 0.1, 0.1, 1.0],
             96.0,
-        )).build();
+        ))
+        .build();
 
-        text
+    text
 }

@@ -1,23 +1,13 @@
 use amethyst::{
-    assets::{
-        Handle, 
-        Asset,
-        AssetStorage,
-        ProcessingState,
-    },
-    Result,
-    Error,
+    assets::{Asset, AssetStorage, Handle, ProcessingState},
     core::{
-        ecs::{
-            prelude::*,
-            Entity,
-            DenseVecStorage
-        },
         bundle::SystemBundle,
+        ecs::{prelude::*, DenseVecStorage, Entity},
     },
+    Error, Result,
 };
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct GameSettings {
@@ -42,11 +32,7 @@ impl From<GameSettings> for Result<ProcessingState<GameSettings>> {
 pub struct GameSettingsBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for GameSettingsBundle {
-    fn build(
-        self,
-        world: &mut World,
-        _dispatcher: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<()> {
+    fn build(self, world: &mut World, _dispatcher: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         world.insert(AssetStorage::<GameSettings>::new());
         Ok(())
     }

@@ -1,20 +1,22 @@
 use amethyst::{
-    assets::{
-        Handle,
+    assets::Handle,
+    core::{
+        ecs::{Entity, ReadStorage, WriteStorage},
+        Hidden,
     },
-    core::{ecs::{Entity, WriteStorage}, Hidden},
+    ecs::{Entities, Join},
     input::{get_key, is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{SpriteSheet},
+    renderer::SpriteSheet,
+    ui::{Anchor, FontAsset, Interactable, UiEvent, UiText, UiTransform},
     window::ScreenDimensions,
-    ui::{Anchor, UiText, UiTransform, FontAsset, Interactable, UiEvent},
 };
 
+use crate::assets::HexAssets;
 use crate::config::GameSettings;
 use crate::entities::create_sprite;
 use crate::map_selection::MapSelectionState;
 use crate::settings_screen::SettingsState;
-use crate::assets::HexAssets;
 
 use std::collections::HashMap;
 
@@ -45,22 +47,25 @@ impl SimpleState for MainMenuState {
         });
     }
     fn on_pause(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        data.world.exec(|(mut transform, mut hidden): (WriteStorage<UiTransform>, WriteStorage<Hidden>)| {
-            self.my_ui.iter().for_each(|e| {
-                hidden.insert(*e, Hidden).expect(EXPECTED);
-                transform.get_mut(*e).expect(EXPECTED).opaque = false;
-            });
-        });
+        data.world.exec(
+            |(mut transform, mut hidden): (WriteStorage<UiTransform>, WriteStorage<Hidden>)| {
+                self.my_ui.iter().for_each(|e| {
+                    hidden.insert(*e, Hidden).expect(EXPECTED);
+                    transform.get_mut(*e).expect(EXPECTED).opaque = false;
+                });
+            },
+        );
     }
     fn on_resume(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        data.world.exec(|(mut transform, mut hidden): (WriteStorage<UiTransform>, WriteStorage<Hidden>)| {
-            self.my_ui.iter().for_each(|e| {
-                hidden.remove(*e);
-                let t = transform.get_mut(*e).expect(EXPECTED);
-                t.opaque = true;
-                
-            });
-        });
+        data.world.exec(
+            |(mut transform, mut hidden): (WriteStorage<UiTransform>, WriteStorage<Hidden>)| {
+                self.my_ui.iter().for_each(|e| {
+                    hidden.remove(*e);
+                    let t = transform.get_mut(*e).expect(EXPECTED);
+                    t.opaque = true;
+                });
+            },
+        );
     }
 
     fn handle_event(
@@ -78,20 +83,17 @@ impl SimpleState for MainMenuState {
             }
         }
         if let StateEvent::Ui(event) = &event {
-            
             use amethyst::ui::UiEventType::*;
-            let UiEvent{event_type, target} = event;
+            let UiEvent { event_type, target } = event;
             match event_type {
                 Click => {
                     if let Some(transition) = self.menu_items.get_mut(target) {
                         return transition(&mut data.world);
                     }
-                },
+                }
                 HoverStart => {
-
-                },
+                }
                 HoverStop => {
-
                 }
                 _ => {
                     //
@@ -145,14 +147,33 @@ impl MenuBuilder {
             bindings: vec![],
         }
     }
-    pub fn add_button(mut self, world: &mut World, text: &str, function: MenuFunction) -> MenuBuilder {
+    pub fn add_button(
+        mut self,
+        world: &mut World,
+        text: &str,
+        function: MenuFunction,
+    ) -> MenuBuilder {
         // needed components
         // interactable
         let interactable = Interactable;
         // uitransform
-        let transform = UiTransform::new(text.to_string(), Anchor::Middle, Anchor::Middle, 0.0, self.y, 0.0, 200.0, 50.0);
+        let transform = UiTransform::new(
+            text.to_string(),
+            Anchor::Middle,
+            Anchor::Middle,
+            0.0,
+            self.y,
+            0.0,
+            200.0,
+            50.0,
+        );
         // uitext
-        let text = UiText::new(self.font.clone(), text.to_string(), [0.1, 0.1, 0.1, 1.0], 20.0);
+        let text = UiText::new(
+            self.font.clone(),
+            text.to_string(),
+            [0.1, 0.1, 0.1, 1.0],
+            20.0,
+        );
         let entity = world
             .create_entity()
             .with(interactable)
@@ -173,8 +194,14 @@ impl MenuBuilder {
 
 fn create_title_text(world: &mut World, font: &Handle<FontAsset>, text: &str) -> Entity {
     let transform = UiTransform::new(
-        text.to_string(), Anchor::TopMiddle, Anchor::TopMiddle,
-        0.0, -100.0, 1.0, 800.0, 75.0,
+        text.to_string(),
+        Anchor::TopMiddle,
+        Anchor::TopMiddle,
+        0.0,
+        -100.0,
+        1.0,
+        800.0,
+        75.0,
     );
 
     let text = world
@@ -185,7 +212,8 @@ fn create_title_text(world: &mut World, font: &Handle<FontAsset>, text: &str) ->
             text.to_string(),
             [0.1, 0.1, 0.1, 1.0],
             96.0,
-        )).build();
+        ))
+        .build();
 
-        text
+    text
 }

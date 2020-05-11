@@ -1,38 +1,29 @@
 use amethyst::{
-    assets::{
-        Handle,
-        Loader,
-        AssetStorage,
-    },
+    assets::{AssetStorage, Handle, Loader},
     core::{
-        ecs::{
-            Entity,
-            DenseVecStorage,
-            Component,
-            Entities,
-            Join,
-            WriteStorage,
-            ReadStorage,
-        },
-        transform::{
-            Transform
-        }
+        ecs::{Component, DenseVecStorage, Entities, Entity, Join, ReadStorage, WriteStorage},
+        transform::Transform,
     },
     input::{get_key, is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{Camera, SpriteSheet, Mesh, MaterialDefaults, Material, SpriteRender, Transparent, resources::Tint, palette::Srgb},
+    renderer::{
+        palette::Srgb, resources::Tint, Camera, Material, MaterialDefaults, Mesh, SpriteRender,
+        SpriteSheet, Transparent,
+    },
+    ui::{
+        Anchor, FontAsset, Interactable, TtfFormat, UiButtonBuilder, UiEvent, UiText, UiTransform,
+    },
     window::ScreenDimensions,
-    ui::{Anchor, TtfFormat, UiText, UiTransform, FontAsset, UiButtonBuilder, Interactable, UiEvent},
 };
 
+use rand::{thread_rng, Rng};
+use std::collections::HashMap;
+
+use crate::assets::HexAssets;
 use crate::config::GameSettings;
 use crate::entities::create_sprite;
-use crate::assets::HexAssets;
 
-use rand::{Rng, thread_rng};
-
-pub struct MapSelectionState {
-}
+pub struct MapSelectionState {}
 
 impl SimpleState for MapSelectionState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
@@ -64,17 +55,13 @@ impl SimpleState for MapSelectionState {
         if let StateEvent::Ui(event) = &event {
             println!("got ui event");
             use amethyst::ui::UiEventType::*;
-            let UiEvent{event_type, target} = event;
+            let UiEvent { event_type, target } = event;
             match event_type {
                 Click => {
                     println!("Clicked! {:?}", target);
-                },
-                HoverStart => {
-
-                },
-                HoverStop => {
-
                 }
+                HoverStart => {}
+                HoverStop => {}
                 _ => {
                     //
                 }
@@ -95,8 +82,14 @@ impl MapSelectionState {
 
 fn create_title_text(world: &mut World, font: &Handle<FontAsset>, text: &str) -> Entity {
     let transform = UiTransform::new(
-        text.to_string(), Anchor::TopMiddle, Anchor::TopMiddle,
-        0.0, -100.0, 1.0, 800.0, 75.0,
+        text.to_string(),
+        Anchor::TopMiddle,
+        Anchor::TopMiddle,
+        0.0,
+        -100.0,
+        1.0,
+        800.0,
+        75.0,
     );
 
     let text = world
@@ -107,19 +100,22 @@ fn create_title_text(world: &mut World, font: &Handle<FontAsset>, text: &str) ->
             text.to_string(),
             [0.1, 0.1, 0.1, 1.0],
             96.0,
-        )).build();
+        ))
+        .build();
 
-        text
+    text
 }
 
 fn create_map(world: &mut World) {
-
     let assets = (*world.read_resource::<HexAssets>()).clone();
 
     let mut settings: GameSettings = {
         let handle = &assets.settings;
-        let asset_storage =  world.read_resource::<AssetStorage<GameSettings>>();
-        asset_storage.get(handle).expect("failed to load settings").clone()
+        let asset_storage = world.read_resource::<AssetStorage<GameSettings>>();
+        asset_storage
+            .get(handle)
+            .expect("failed to load settings")
+            .clone()
     };
 
     let player_count = settings.player_count.unwrap_or(8);
@@ -128,7 +124,11 @@ fn create_map(world: &mut World) {
     let width = settings.width;
     let height = settings.height;
 
-    let area_size = if settings.area_size == 0 { 1 } else {settings.area_size};
+    let area_size = if settings.area_size == 0 {
+        1
+    } else {
+        settings.area_size
+    };
 
     let hex_count = territory_count * settings.area_size;
     let overall_area = width * height;
@@ -139,17 +139,21 @@ fn create_map(world: &mut World) {
 
     {
         let camera = assets.camera;
-        world.exec(|(mut transforms, cameras): (WriteStorage<Transform>, ReadStorage<Camera>)| {
-            for (mut transform, camera) in (&mut transforms, &cameras).join() {
-                let width = width as f32 * hex_offset_x * scale;
-                let height = height as f32 * hex_offset_y * scale;
-                transform.set_translation_xyz(width / 2.0, height / 2.0, 1.0);
-            }
-        });
-
+        world.exec(
+            |(mut transforms, cameras): (WriteStorage<Transform>, ReadStorage<Camera>)| {
+                for (mut transform, camera) in (&mut transforms, &cameras).join() {
+                    let width = width as f32 * hex_offset_x * scale;
+                    let height = height as f32 * hex_offset_y * scale;
+                    transform.set_translation_xyz(width / 2.0, height / 2.0, 1.0);
+                }
+            },
+        );
     }
 
-    println!("making map {}x{} = {}, with {} hexes in {} territories", width, height, overall_area, hex_count, territory_count);
+    println!(
+        "making map {}x{} = {}, with {} hexes in {} territories({}-sized)",
+        width, height, overall_area, hex_count, territory_count, area_size
+    );
 
     // generate a number of hexagon entities
     // these will be combined into groups of area_size hexes
@@ -158,14 +162,10 @@ fn create_map(world: &mut World) {
     // world.exec(|(mut entities, mut hexagons): (Entities, WriteStorage<Hexagon>)| {
     for x in 0..width {
         for y in 0..height {
-            let even_column_offset: (f32, f32) = if x % 2 == 0 {
-                (-0.5, 28.0)
-            } else {
-                (0.0, 0.0)
-            };
+            let even_column_offset: (f32, f32) = if x % 2 == 0 { (-0.5, 28.0) } else { (0.0, 0.0) };
             let x = x as f32;
             let y = y as f32;
-            
+
             // entities.build_entity()
             let sprite_sheet_handle = assets.hex_sprites.clone();
 
@@ -199,8 +199,8 @@ fn create_map(world: &mut World) {
             let hex = hex_builder.build();
             hex_list.push(hex);
         }
-    }        
- 
+    }
+
     // randomly select territory_count hexes to seed the map
     let mut rng = thread_rng();
     let mut players = world.write_storage::<Player>();
@@ -209,10 +209,16 @@ fn create_map(world: &mut World) {
     for country in 0..territory_count {
         let x = rng.gen_range(0, width) as usize;
         let y = rng.gen_range(0, height) as usize;
-        println!("picking area {},{}, which is index {} out of {}", x, y, y * width as usize + x, hex_list.len());
+        println!(
+            "picking area {},{}, which is index {} out of {}",
+            x,
+            y,
+            y * width as usize + x,
+            hex_list.len()
+        );
         let hex = hex_list.get(y * width as usize + x).unwrap();
         println!("initializing area {}", country);
-        
+
         let player = match country % player_count {
             0 => Player::One,
             1 => Player::Two,
@@ -230,21 +236,21 @@ fn create_map(world: &mut World) {
     }
 
     // flood fill the map until each area has area_size hexes
-    while areas.iter().any(|(_origin, (size, _player, blocked))| *size < area_size && !blocked) {
-        let mut working_areas = areas.iter()
-        .filter(|(_origin, (size, _player, blocked))| *size < area_size && !blocked)
-        .collect::<Vec<(&Entity, &(u32, Player, bool))>>();
-        working_areas.sort_by(|a, b| {
-            a.0.cmp(b.0)
-        });
+    while areas
+        .iter()
+        .any(|(_origin, (size, _player, blocked))| *size < area_size && !blocked)
+    {
+        let mut working_areas = areas
+            .iter()
+            .filter(|(_origin, (size, _player, blocked))| *size < area_size && !blocked)
+            .collect::<Vec<(&Entity, &(u32, Player, bool))>>();
+        working_areas.sort_by(|a, b| a.0.cmp(b.0));
         let next_area = working_areas.iter().next();
         // get this area's neighbor hexes
 
         // check if they are occupied
         // add one of them to this area
         // if all are occupied, mark this area as blocked
-
-
     }
 
     // color each hex according to which player it represents
@@ -268,11 +274,6 @@ fn create_map(world: &mut World) {
 
         println!("tint: {:?}", tint);
     }
-
-    
-
-
-
 }
 
 /// the Hexagon component is the basic building block of the game board.
